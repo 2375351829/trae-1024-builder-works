@@ -114,20 +114,20 @@ input,select,textarea{font-family:inherit;font-weight:600;font-size:14px;color:v
 .banner.info .b-act .btn{border-color:var(--ink);box-shadow:2.5px 2.5px 0 var(--ink)}
 .banner.info .b-act .btn:hover{background:var(--accent2)}
 /* ---------- 探查日志 ---------- */
-.probe-log{margin-top:10px;border:1px solid rgba(0,0,0,.16);border-radius:10px;padding:7px 10px;background:rgba(255,255,255,.72)}
-.banner.ok .probe-log{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
+.probe-log{margin-top:10px;border:1px solid rgba(0,0,0,.18);border-radius:10px;padding:7px 10px;background:#FFFFFF}
+.banner.ok .probe-log{background:#FFFFFF;border-color:rgba(0,0,0,.2)}
 .probe-log summary{cursor:pointer;font-weight:800;font-size:12.5px;color:var(--ink)}
-.banner.ok .probe-log summary{color:#fff}
+.banner.ok .probe-log summary{color:var(--ink)}
 .probe-log table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
-.probe-log th{text-align:left;font-weight:800;color:var(--muted);padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.14);font-size:11px}
-.banner.ok .probe-log th{color:#D8ECDF;border-bottom-color:rgba(255,255,255,.22)}
-.probe-log td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.07);vertical-align:top}
-.banner.ok .probe-log td{border-bottom-color:rgba(255,255,255,.12);color:#EAF4EC}
+.probe-log th{text-align:left;font-weight:800;color:#6C7A80;padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.16);font-size:11px}
+.banner.ok .probe-log th{color:#6C7A80;border-bottom-color:rgba(0,0,0,.16)}
+.probe-log td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.09);vertical-align:top;color:#25353B}
+.banner.ok .probe-log td{border-bottom-color:rgba(0,0,0,.09);color:#25353B}
 .probe-log .pl-ico{width:22px;text-align:center}
 .probe-log .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;white-space:nowrap}
-.pl-note{margin:8px 0 0;font-size:11.5px;line-height:1.6;color:var(--muted)}
-.banner.ok .pl-note{color:#CFE6D8}
-.banner.ok .probe-log code{background:rgba(255,255,255,.14);padding:1px 4px;border-radius:4px}
+.pl-note{margin:8px 0 0;font-size:11.5px;line-height:1.6;color:#5A6B5C}
+.banner.ok .pl-note{color:#5A6B5C}
+.probe-log code{background:#EDF3F5;color:var(--ink);border:1px solid rgba(0,0,0,.14);padding:1px 4px;border-radius:4px}
 
 /* ---------- KPI 条 ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:18px 0}
@@ -518,7 +518,7 @@ table.facts td b{font-variant-numeric:tabular-nums}
   <!-- ========================= 事实基线 ========================= -->
   <section class="card">
     <div class="card-head"><h2>事实基线与数据说明 <span class="badge-sticker ghost">Ground Truth</span></h2></div>
-    <p class="desc">页面内置一份采样快照（离线也能渲染时间轴）；任何一次成功导入都会覆盖它。</p>
+    <p class="desc">页面内置一份采样快照（离线也能渲染时间轴）；<b>页面会自己探查最新楼层</b> —— 依次尝试「本站镜像 / 论坛直连 / 公共代理 / RSS」四类通道，命中即止，全程<b>不需要人工复制粘贴任何 JSON</b>。「本站镜像」由 GitHub Actions 定时抓取主帖全量楼层写成静态文件，Pages 对静态资源返回 <code>access-control-allow-origin: *</code>，所以页面可跨源直取（实测同源 <b>0.30s</b> / 跨源 <b>0.12s</b> 命中）。</p>
     <table class="facts">
       <thead><tr><th>指标</th><th>采样值（2026-10-21 01:00 CST）</th><th>说明</th></tr></thead>
       <tbody>
@@ -2193,11 +2193,19 @@ function exposeDebugAPI() {
         participants: ST.meta.participants,
         lastPostedAt: ST.meta.lastPostedAt,
         source: ST.source,
+        sourceLabel: ST.sourceLabel,
         valid: validReplies,
         validStrict: strictReplies,
-        validVariant: validReplies - strictReplies
+        validVariant: validReplies - strictReplies,
+        probeAt: ST.probeAt,
+        mirrorAt: ST.mirrorAt,
+        mirrorAdded: ST.mirrorAdded
       };
     },
+    /** 最近一次自主探查的逐条通道结果（命中哪条、耗时、失败原因） */
+    probeLog: function () { return ST.probeLog || []; },
+    /** 手动触发一次探查（返回 Promise） */
+    probe: function () { return refresh(true); },
     /** 里程碑解析结果（自测断言用） */
     milestones: function () {
       return MILESTONES.map(function (m) {
