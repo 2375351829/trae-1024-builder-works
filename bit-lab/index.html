@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="description" content="1024 位运算 · Bit Lab —— 16 格 × 64 位 = 1024 位寄存器，2048 的骨架 + 真实按位或运算" />
+<title>1024 位运算 · Bit Lab</title>
+<style>
+/* ==========================================================================
+   1024 位运算 · Bit Lab —— 单文件、零依赖、零外部请求
+   设计令牌全部取自官方海报实测（索引-index.md §5.5 / 作品秀计划 A3），勿自创色板
+   ========================================================================== */
+:root{
+  --paper:#F4F8F9;        /* 页面底（冷调纸白） */
+  --card:#FFFFFF;         /* 卡片 */
+  --accent:#D7FCAE;       /* 主强调 · 荧光柠檬绿 */
+  --accent-2:#CCFC9C;     /* 浅绿次级 */
+  --mid:#90CC78;          /* 中绿 */
+  --mid-2:#84C06C;
+  --deep:#6CA83C;         /* 深绿 */
+  --brand:#73F99A;        /* 品牌亮绿 */
+  --bokeh:#79B446;        /* 光斑绿 */
+  --ink:#000000;          /* 墨黑 */
+  --ink-2:#5A6B5C;        /* 次级文字 */
+  --tile:110px;           /* 瓦片尺寸，由 JS 计算 */
+  --gap:10px;             /* 棋盘间隙 */
+  --mx:150px;             /* 运算矩阵尺寸 */
+  --radius:18px;
+  --shadow-light:0 1px 2px rgba(0,0,0,.04), 0 10px 26px rgba(0,0,0,.05);
+  --font-black:"Arial Black","Segoe UI Black","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);background:var(--paper);min-height:100vh;overflow-x:hidden;
+  padding:16px 14px 40px;
+}
+/* 极浅方格纸纹（2px 线 / 20px 格） */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 2px, transparent 2px 20px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 2px, transparent 2px 20px);
+}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;}
+
+/* ---------- 顶部 ---------- */
+.topbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px;}
+.brand h1{
+  margin:0;font-family:var(--font-black);font-weight:900;font-size:clamp(28px,7vw,46px);
+  letter-spacing:.5px;line-height:1.05;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+/* 贴纸式徽章：浅绿填充 + 3px 黑描边 + 2° 旋转 */
+.badge{
+  display:inline-block;background:var(--accent);border:3px solid var(--ink);
+  border-radius:12px;padding:2px 12px;transform:rotate(-2deg);
+  font-family:var(--font-black);font-size:.42em;letter-spacing:1px;
+  box-shadow:3px 3px 0 rgba(0,0,0,.9);
+}
+.subtitle{margin:8px 0 0;font-size:14px;color:var(--ink-2);font-weight:700;}
+.stats{display:flex;gap:8px;flex-wrap:wrap;}
+.stat{
+  background:var(--card);border:2.5px solid var(--ink);border-radius:14px;
+  padding:6px 14px;min-width:84px;text-align:center;box-shadow:3px 3px 0 rgba(0,0,0,.85);
+}
+.stat-k{display:block;font-size:11px;color:var(--ink-2);font-weight:700;letter-spacing:1px;}
+.stat-v{display:block;font-family:var(--font-black);font-size:20px;line-height:1.2;}
+.stat-v.best{color:var(--deep);}
+
+/* ---------- 布局 ---------- */
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:16px;align-items:start;}
+@media (max-width:860px){ main{grid-template-columns:minmax(0,1fr);} }
+.panel{
+  background:var(--card);border:2.5px solid var(--ink);border-radius:var(--radius);
+  box-shadow:4px 4px 0 rgba(0,0,0,.9), var(--shadow-light);padding:14px;
+}
+.side{display:flex;flex-direction:column;gap:14px;}
+
+/* ---------- 进度条 ---------- */
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.progress-label{font-size:13px;font-weight:800;}
+.progress-label b{font-family:var(--font-black);font-size:15px;}
+.progress{flex:1;min-width:120px;height:14px;background:#EDF3F4;border:2px solid var(--ink);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent) 0%,var(--accent-2) 35%,var(--mid) 70%,var(--deep) 100%);transition:width .25s ease;}
+
+/* ---------- 棋盘 ---------- */
+.board{
+  position:relative;width:100%;aspect-ratio:1/1;background:var(--card);
+  border:2.5px solid var(--ink);border-radius:16px;padding:var(--gap);
+  touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;
+}
+.cell{
+  position:absolute;background:#EEF4F5;border-radius:12px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.05);
+  z-index:1;
+}
+.tile-wrap{
+  position:absolute;left:0;top:0;width:var(--tile);height:var(--tile);
+  transition:transform .17s cubic-bezier(.2,.9,.3,1);will-change:transform;
+  z-index:2;                 /* 瓦片必须压在同一层的占位格之上 */
+}
+.tile{
+  position:relative;width:100%;height:100%;border-radius:13px;border:2.5px solid var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  box-shadow:0 3px 0 rgba(0,0,0,.16);cursor:pointer;
+}
+.tile.sel{outline:3px dashed var(--ink);outline-offset:2px;}
+.tile-num{font-family:var(--font-black);font-size:calc(var(--tile)*.27);line-height:1;letter-spacing:-1px;}
+.tile-dots{
+  width:calc(var(--tile)*.60);height:calc(var(--tile)*.60);
+  display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
+  gap:calc(var(--tile)*.020);
+}
+.tile-dots .dot{background:rgba(0,0,0,.10);border-radius:1.5px;}
+.tile-dots .dot.on{background:var(--ink);}
+.tile.t64 .tile-dots .dot.on{background:rgba(255,255,255,.92);}
+@keyframes tilePop{0%{transform:scale(.25) rotate(-10deg);opacity:0}65%{transform:scale(1.10) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.tile.pop{animation:tilePop .3s cubic-bezier(.3,1.5,.5,1);}
+.tile.fade{animation:tileFade .18s ease forwards;}
+@keyframes tileFade{to{transform:scale(.35);opacity:0;}}
+@keyframes dotPopIn{0%{transform:scale(.2);opacity:.25}70%{transform:scale(1.5);opacity:1}100%{transform:scale(1);opacity:1}}
+.tile-dots .dot.popin{animation:dotPopIn .3s cubic-bezier(.3,1.7,.5,1);}
+@keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.board.shake{animation:shakeX .16s ease;}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  font-family:var(--font-black);font-size:14px;letter-spacing:.5px;cursor:pointer;
+  background:var(--accent);border:3px solid var(--ink);border-radius:13px;padding:9px 16px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s;
+  color:var(--ink);
+}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink);}
+.btn.ghost{background:var(--card);}
+.btn[disabled]{background:#E3EAEB;color:#93A19A;cursor:not-allowed;box-shadow:3px 3px 0 rgba(0,0,0,.25);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;}
+.hint{margin-top:12px;font-size:12.5px;color:var(--ink-2);font-weight:700;line-height:1.7;}
+.rule-note{
+  margin:10px 0 0;font-size:11.5px;color:#93A19A;font-weight:600;line-height:1.75;
+  border-left:3px solid rgba(0,0,0,.12);padding-left:9px;
+}
+.rule-note b{color:var(--ink-2);}
+
+/* 方向键（移动端 & 桌面辅助） */
+.dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);gap:6px;justify-content:center;margin-top:4px;}
+.dpad .btn{padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.dpad .up{grid-column:2;grid-row:1;}
+.dpad .left{grid-column:1;grid-row:2;}
+.dpad .down{grid-column:2;grid-row:2;}
+.dpad .right{grid-column:3;grid-row:2;}
+
+/* ---------- 侧栏卡片 ---------- */
+.card h2{font-family:var(--font-black);font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+.card h2 .tag{font-family:inherit;font-size:11px;background:var(--accent);border:2px solid var(--ink);border-radius:8px;padding:1px 7px;transform:rotate(-2deg);}
+.kv{display:grid;grid-template-columns:78px 1fr;gap:4px 8px;font-size:12.5px;line-height:1.6;}
+.kv dt{color:var(--ink-2);font-weight:800;}
+.kv dd{margin:0;font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace;word-break:break-all;font-size:12px;}
+.mono{font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace;}
+.empty-tip{font-size:13px;color:var(--ink-2);font-weight:700;line-height:1.8;}
+
+/* 运算过程矩阵 */
+.op-view{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
+.op-item{text-align:center;}
+.op-cap{font-size:11px;font-weight:900;margin-bottom:4px;}
+.matrix{
+  display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:2px;
+  background:#F4F8F9;border:2.5px solid var(--ink);border-radius:9px;padding:4px;
+  width:var(--mx);height:var(--mx);
+}
+.side .matrix{--mx:82px;}
+.matrix .dot{background:rgba(0,0,0,.07);border-radius:1.5px;transition:background .2s,transform .2s;}
+.matrix .dot.on{background:var(--ink);}
+.matrix .dot.u-a{background:var(--accent);}
+.matrix .dot.u-b{background:var(--accent-2);}
+.matrix .dot.u-both{background:var(--deep);}
+.matrix .dot.pad{background:var(--brand);}
+@keyframes dotPop{0%{transform:scale(.2);opacity:.2}70%{transform:scale(1.45);opacity:1}100%{transform:scale(1);opacity:1}}
+.matrix .dot.anim{animation:dotPop .3s cubic-bezier(.3,1.7,.5,1);}
+.op-sym{font-family:var(--font-black);font-size:15px;}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink-2);font-weight:800;justify-content:center;margin-bottom:8px;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px;border:1.5px solid var(--ink);}
+.op-line{font-size:12.5px;font-weight:800;text-align:center;line-height:1.7;}
+.badge-pad{background:var(--brand);border:2.5px solid var(--ink);border-radius:9px;padding:1px 8px;font-size:11.5px;display:inline-block;transform:rotate(-1.5deg);}
+.log{max-height:170px;overflow:auto;margin-top:10px;border-top:1.5px dashed rgba(0,0,0,.25);padding-top:8px;}
+.log-item{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;padding:4px 6px;border-radius:7px;cursor:pointer;}
+.log-item:hover{background:var(--accent);}
+.log-item .li-step{color:var(--ink-2);}
+.log-empty{font-size:12px;color:var(--ink-2);font-weight:700;}
+
+/* 知识卡 */
+.facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+.facts li{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.6;}
+.fact-k{
+  flex:0 0 auto;font-style:normal;font-family:var(--font-black);font-size:11px;
+  background:var(--accent);border:2px solid var(--ink);border-radius:8px;
+  padding:1px 7px;transform:rotate(-2deg);white-space:nowrap;
+}
+.fact-v{flex:1;color:var(--ink-2);font-weight:700;}
+.fact-v b{color:var(--ink);}
+.fact-v sup{font-size:.75em;}
+.demo-flag{
+  display:inline-block;background:#FFE9A8;border:2px solid var(--ink);border-radius:8px;
+  padding:0 7px;font-size:11px;font-weight:800;transform:rotate(-1.5deg);margin-bottom:8px;
+}
+
+/* 成就卡 */
+.nick-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+input[type=text]{
+  font-family:inherit;font-size:14px;font-weight:800;padding:8px 12px;border:2.5px solid var(--ink);
+  border-radius:11px;background:#FBFDFD;color:var(--ink);min-width:150px;flex:1;
+}
+input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
+
+/* ---------- 覆盖层（合并演出 / 胜利） ---------- */
+.overlay{
+  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(244,248,249,.86);backdrop-filter:blur(3px);
+}
+.overlay[hidden]{display:none;}
+.overlay-card{
+  position:relative;background:var(--card);border:3px solid var(--ink);border-radius:22px;
+  box-shadow:6px 6px 0 rgba(0,0,0,.9);padding:18px;width:min(720px,100%);max-height:92vh;overflow:auto;
+}
+.op-title{font-family:var(--font-black);font-size:19px;text-align:center;margin:0 0 14px;line-height:1.4;}
+.op-title .hl{background:var(--accent);border:2.5px solid var(--ink);border-radius:9px;padding:1px 9px;display:inline-block;transform:rotate(-1.5deg);}
+.op-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+.op-foot{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+.op-note{font-size:12.5px;font-weight:800;}
+.op-foot .btn{padding:7px 18px;}
+
+/* ---------- 胜利 ---------- */
+.victory-overlay{background:rgba(20,32,18,.9);}
+#bokehCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.victory-card{
+  position:relative;background:var(--card);border:3px solid var(--ink);border-radius:24px;
+  box-shadow:6px 6px 0 rgba(0,0,0,.9);padding:20px;width:min(680px,100%);max-height:94vh;overflow:auto;text-align:center;
+}
+.victory-title{font-family:var(--font-black);font-size:clamp(20px,5vw,30px);margin-bottom:6px;}
+.victory-sub{font-size:13px;color:var(--ink-2);font-weight:800;margin-bottom:14px;}
+.bitmap-wrap{position:relative;width:min(340px,82vw);margin:0 auto 14px;}
+.bitmap{
+  display:grid;grid-template-columns:repeat(32,1fr);grid-template-rows:repeat(32,1fr);gap:1px;
+  width:100%;aspect-ratio:1/1;          /* 必须给出高度，否则 1fr 行会塌成 0 高 */
+  background:#F4F8F9;border:3px solid var(--ink);border-radius:10px;padding:5px;
+}
+.bitmap .b{background:rgba(0,0,0,.07);border-radius:1px;}
+.bitmap .b.on{background:var(--deep);}
+.brush{
+  position:absolute;inset:0;pointer-events:none;border-radius:10px;mix-blend-mode:screen;
+  background:linear-gradient(100deg,transparent 38%,rgba(215,252,174,0) 44%,rgba(215,252,174,.85) 50%,rgba(115,249,154,.95) 53%,transparent 60%);
+  transform:translateX(-130%);animation:brushSweep 1.5s cubic-bezier(.4,0,.2,1) .3s 2;
+}
+@keyframes brushSweep{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.mascot{
+  width:132px;height:132px;margin:6px auto 12px;display:grid;
+  grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:0;
+  animation:mascotPop .7s cubic-bezier(.2,1.7,.4,1) .45s both;
+}
+@keyframes mascotPop{0%{transform:scale(0) rotate(-28deg);opacity:0}70%{transform:scale(1.16) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(-2deg);opacity:1}}
+.mascot .px{background:transparent;}
+.mascot .px.face{background:var(--ink);}
+.mascot .px.eye{background:#FFFFFF;}
+.mascot .px.dot{background:var(--brand);}
+.victory-stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+.victory-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;}
+
+/* ---------- 终局提示 ---------- */
+.banner{
+  margin-top:12px;border:2.5px solid var(--ink);border-radius:13px;padding:9px 13px;
+  font-size:13px;font-weight:800;text-align:center;background:var(--accent);
+  box-shadow:3px 3px 0 rgba(0,0,0,.85);
+}
+.banner.over{background:#FFE9E9;}
+.banner[hidden]{display:none;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== 顶部 ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <h1>1024 位运算<span class="badge">BIT LAB</span></h1>
+      <p class="subtitle">16 格 × 64 位 = <b>1024 位寄存器</b>　|　大数字 = 这一串 64 位里 1 的个数</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="stat-k">分数</span><span class="stat-v" id="score">0</span></div>
+      <div class="stat"><span class="stat-k">最高分</span><span class="stat-v best" id="best">0</span></div>
+      <div class="stat"><span class="stat-k">步数</span><span class="stat-v" id="steps">0</span></div>
+    </div>
+  </header>
+
+  <!-- ===================== 主体 ===================== -->
+  <main>
+    <!-- 左：棋盘 -->
+    <section class="panel">
+      <div class="progress-row">
+        <div class="progress-label">已点亮 <b id="litCount">0</b> / 1024 位</div>
+        <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="board" id="board" aria-label="1024 位运算棋盘"></div>
+
+      <div class="btn-row">
+        <button class="btn" id="btnRestart">重开一局</button>
+        <button class="btn ghost" id="btnDemo">演示：查看胜利画面</button>
+        <div class="dpad" role="group" aria-label="方向控制">
+          <button class="btn up" data-dir="up" aria-label="上">▲</button>
+          <button class="btn left" data-dir="left" aria-label="左">◀</button>
+          <button class="btn down" data-dir="down" aria-label="下">▼</button>
+          <button class="btn right" data-dir="right" aria-label="右">▶</button>
+        </div>
+      </div>
+
+      <div class="banner" id="banner" hidden></div>
+      <p class="rule-note">
+        开局：<b>16 格全部预置</b>（每格随机 2 或 4 个 1），方便你第一眼就看到完整的 64 位点阵；
+        16 格 × 64 位 = 1024 位寄存器。
+      </p>
+      <p class="rule-note">
+        规则说明：两个同值格合并 = 真实按位或 <span class="mono">A OR B</span>，再把结果补足到 2 倍的 1（标注「补 N 位」）。
+        因为按位或是「1 的总数守恒」的运算，且 4×4 棋盘最多只能同时堆住 12 个满格，
+        所以<b>满格堆到 12 个后，新格会直接补满 64 个 1</b>（否则 1024 位永远凑不齐）；
+        走投无路时也可点击未满的格子执行「终局补位」把它补满。
+      </p>
+      <p class="hint">
+        操作：<b>方向键</b> / <b>WASD</b> / <b>触屏滑动</b>（也可用下方方向按钮）· 相同数字相撞合并翻倍 · <b>点击任意格子</b>查看 64 位解读<br>
+        机制：每格是一个 64 位寄存器，合并 = 真实按位或 <span class="mono">A OR B</span> + 补位；16 格全部达到 64 → 1024 个 1 全部点亮。
+      </p>
+    </section>
+
+    <!-- 右：解读 / 运算过程 / 成就卡 -->
+    <aside class="side">
+      <section class="panel card">
+        <h2>64 位解读 <span class="tag">点格子</span></h2>
+        <div id="decodeBody"><p class="empty-tip">点击棋盘里的任意一格，<br>这里会把这串 64 位比特解码成十进制 / IPv6 / HEX / 时间戳。</p></div>
+      </section>
+
+      <section class="panel card">
+        <h2>运算过程 <span class="tag">A OR B</span></h2>
+        <div id="opBody"><p class="empty-tip">还没有合并记录。<br>把两个相同的数字撞到一起，就能看到真实的按位或运算过程。</p></div>
+      </section>
+
+      <section class="panel card">
+        <h2>1024 的 6 种身份 <span class="tag">知识卡</span></h2>
+        <ul class="facts">
+          <li><i class="fact-k">位</i><span class="fact-v">2<sup>10</sup>；二进制 <span class="mono">10000000000</span>，共 <b>11 位</b></span></li>
+          <li><i class="fact-k">字节</i><span class="fact-v">1024 B = <b>1 KiB</b>（IEC, 2<sup>10</sup>）= <b>1.024 kB</b>（SI, 10<sup>3</sup>）</span></li>
+          <li><i class="fact-k">网络</i><span class="fact-v">IPv6 的 <b>/64</b> 前缀块 = 2<sup>64</sup> = 18,446,744,073,709,551,616 个地址 —— 运营商分配给<b>单个用户</b>的最小区块</span></li>
+          <li><i class="fact-k">时间</i><span class="fact-v">1024 秒 ≈ <b>17 分钟</b>；1024 分钟 ≈ <b>17 小时</b></span></li>
+          <li><i class="fact-k">像素</i><span class="fact-v">32 × 32 = <b>1024 px</b> —— 正是本作品胜利位图的尺寸</span></li>
+          <li><i class="fact-k">寄存器</i><span class="fact-v">16 槽 × 64 位 = <b>1024 位</b> = <b>128 字节</b>（本作品的全部数据量）</span></li>
+        </ul>
+      </section>
+
+      <section class="panel card">
+        <h2>成就卡 <span class="tag">PNG</span></h2>
+        <div class="nick-row">
+          <input type="text" id="nickInput" maxlength="16" placeholder="填个昵称" autocomplete="off" />
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn" id="btnCard" disabled>下载「1024 位全 1 寄存器」成就卡</button>
+        </div>
+        <p class="hint" id="cardHint">达成胜利（16 格全部 64 个 1）后解锁成就卡。</p>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<!-- ===================== 合并演出覆盖层 ===================== -->
+<div class="overlay" id="mergeOverlay" hidden>
+  <div class="overlay-card">
+    <h3 class="op-title">按位或运算：<span class="hl">A OR B = C</span></h3>
+    <div class="op-row">
+      <div class="op-item"><div class="op-cap">A</div><div class="matrix" id="matA"></div></div>
+      <div class="op-sym">OR</div>
+      <div class="op-item"><div class="op-cap">B</div><div class="matrix" id="matB"></div></div>
+      <div class="op-sym">=</div>
+      <div class="op-item"><div class="op-cap">C</div><div class="matrix" id="matC"></div></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>仅 A 有</span>
+      <span><i style="background:var(--accent-2)"></i>仅 B 有</span>
+      <span><i style="background:var(--deep)"></i>A B 共有</span>
+      <span><i style="background:var(--brand)"></i>补位新点</span>
+    </div>
+    <div class="op-foot">
+      <span class="badge-pad" id="opPadBadge">补 0 位</span>
+      <span class="op-note" id="opNote"></span>
+      <button class="btn" id="opNext">继续</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 胜利覆盖层 ===================== -->
+<div class="overlay victory-overlay" id="victoryOverlay" hidden>
+  <canvas id="bokehCanvas"></canvas>
+  <div class="victory-card">
+    <div class="victory-title">1024 位全 1 寄存器</div>
+    <div class="victory-sub">16 个 64 位槽位 × 64 个 1 = <b>1024 个位全部点亮</b></div>
+    <div class="bitmap-wrap">
+      <div class="bitmap" id="bitmap"></div>
+      <div class="brush"></div>
+    </div>
+    <div class="mascot" id="mascot" aria-hidden="true"></div>
+    <div class="victory-stats">
+      <div class="stat"><span class="stat-k">分数</span><span class="stat-v" id="vScore">0</span></div>
+      <div class="stat"><span class="stat-k">步数</span><span class="stat-v" id="vSteps">0</span></div>
+      <div class="stat"><span class="stat-k">点亮位数</span><span class="stat-v">1024</span></div>
+    </div>
+    <div class="victory-actions">
+      <input type="text" id="vNick" maxlength="16" placeholder="填个昵称写进成就卡" autocomplete="off" />
+      <button class="btn" id="btnCard2">下载成就卡 PNG</button>
+      <button class="btn ghost" id="btnCloseVictory">收下，继续玩</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ==========================================================================
+   1024 位运算 · Bit Lab —— 全部逻辑（原生 JS，无框架无依赖无网络请求）
+   数据模型：
+     · 棋盘 4×4 = 16 个槽位，每个槽位 = 一个 64 位寄存器（Uint8Array(64)，元素 0/1）
+     · 瓦片"数值" = 该 64 位串里 1 的个数（popcount），取值为 2/4/8/16/32/64
+     · 合并 = 逐位或 A OR B → 统计 popcount → 不足 2×目标 时在空闲位补位
+   ========================================================================== */
+
+/* ---------------- 常量 ---------------- */
+const SIZE = 4;                 // 4×4
+const SLOT_COUNT = 16;          // 16 个槽位
+const BITS = 64;                // 每槽 64 位
+const TOTAL_BITS = 1024;        // 16 × 64
+const STORE_KEY = 'bitlab.v1';   // localStorage 键
+
+/* 终局补位阈值（见说明文档「规则修订」）：
+   按位或合并是「1 的总数守恒」运算——合并 2 个 v 只得 2v 个 1，总数不变；
+   而 4×4 棋盘从零构建一个满格（64 个 1）至少需要 5 个空位周转，
+   所以满格最多堆到 12 个，剩余几格只能靠「补位」补满，1024 位才可能全亮。 */
+const FULL_THRESHOLD = 12;
+
+/* 官方色阶：数值 → 背景 / 前景（计划 A3） */
+const TIER_BG  = { 2:'#F2FCE4', 4:'#D7FCAE', 8:'#CCFC9C', 16:'#90CC78', 32:'#84C06C', 64:'#6CA83C' };
+const TIER_FG  = { 2:'#000000', 4:'#000000', 8:'#000000', 16:'#000000', 32:'#000000', 64:'#FFFFFF' };
+
+/* ---------------- DOM 引用 ---------------- */
+const $ = id => document.getElementById(id);
+const boardEl      = $('board');
+const scoreEl      = $('score');
+const bestEl       = $('best');
+const stepsEl      = $('steps');
+const litCountEl   = $('litCount');
+const progressFill = $('progressFill');
+const bannerEl     = $('banner');
+const decodeBody   = $('decodeBody');
+const opBody       = $('opBody');
+const mergeOverlay = $('mergeOverlay');
+const matA = $('matA'), matB = $('matB'), matC = $('matC');
+const opPadBadge = $('opPadBadge'), opNote = $('opNote');
+const victoryOverlay = $('victoryOverlay');
+const bitmapEl = $('bitmap');
+const mascotEl  = $('mascot');
+const nickInput = $('nickInput'), vNick = $('vNick');
+const btnCard = $('btnCard'), btnCard2 = $('btnCard2');
+
+/* ---------------- 全局状态 ---------------- */
+let grid = new Array(SLOT_COUNT).fill(null);   // 16 个槽位
+let tileEls = new Map();                        // tile.id → DOM
+let tileSeq = 0;
+let score = 0, best = 0, steps = 0;
+let selectedId = null;
+let over = false, won = false;
+let moveQueue = [];
+let processing = false;
+let mergeLog = [];          // 合并历史（可回看）
+let showQueue = [];         // 待播放的合并演出
+let showing = false;
+let showTimer = null;
+let animTimers = [];
+
+/* ==========================================================================
+   一、比特工具
+   ========================================================================== */
+
+/** 统计 1 的个数（popcount） */
+function popcount(bits){
+  let c = 0;
+  for (let i = 0; i < BITS; i++) if (bits[i]) c++;
+  return c;
+}
+
+/** 64 位串 → 无符号整数（BigInt）。位序：索引 0 = 最高位 MSB，索引 63 = 最低位 LSB */
+function bitsToBigInt(bits){
+  let v = 0n;
+  for (let i = 0; i < BITS; i++) v = (v << 1n) | BigInt(bits[i]);
+  return v;
+}
+
+/**
+ * 64 位串 → IPv6 八段（8 组 16 进制，高位在前）
+ * 约定（对齐规格示例 2001:0db8:0000:0000:0000:ff00:0042:8329）：
+ * IPv6 整址是 128 位（8 组 × 16 位），本槽只有 64 位，
+ * 因此把这 64 位放进「低 64 位」＝后 4 组，前 4 组左补 0000（接口标识符写法）。
+ * 例：64 位全 1 → 0000:0000:0000:0000:FFFF:FFFF:FFFF:FFFF
+ */
+function bitsToIPv6(bits){
+  const g = [];
+  for (let k = 0; k < 8; k++){
+    let x = 0;
+    if (k >= 4){                             // 只有后 4 组承载本槽的 64 位
+      for (let i = 0; i < 16; i++) x = (x << 1) | bits[(k - 4) * 16 + i];
+    }
+    g.push(x.toString(16).toUpperCase().padStart(4, '0'));
+  }
+  return g.join(':');
+}
+
+/** 64 位串 → 8 个字节（高位在前 / big-endian） */
+function bitsToBytes(bits){
+  const b = [];
+  for (let k = 0; k < 8; k++){
+    let x = 0;
+    for (let i = 0; i < 8; i++) x = (x << 1) | bits[k * 8 + i];
+    b.push(x);
+  }
+  return b;
+}
+
+/** 字节 → ASCII 预览（不可打印字符显示为点） */
+function byteToAscii(x){
+  return (x >= 0x20 && x <= 0x7e) ? String.fromCharCode(x) : '.';
+}
+
+/** 64 位串 → 纳秒时间戳解读 */
+function bitsToTimestamp(bits){
+  const ns = bitsToBigInt(bits);
+  const ms = ns / 1000000n;
+  const MAX = 8640000000000000n;               // JS Date 可表示范围（毫秒）
+  if (ms > MAX) return { ns: ns.toString(), text: '超出 JS Date 可表示范围（换算成日期需超过公元 275760 年）' };
+  const d = new Date(Number(ms) + 8 * 3600 * 1000); // 统一按 UTC+8 输出
+  const iso = d.toISOString().replace('T', ' ').replace('Z', '');
+  return { ns: ns.toString(), text: iso + ' (UTC+8)' };
+}
+
+/* ==========================================================================
+   二、瓦片与合并
+   ========================================================================== */
+
+function makeTile(bits){
+  return { id: ++tileSeq, bits: bits, value: popcount(bits) };
+}
+
+/** 合并两个同值瓦片：逐位或 → 统计 popcount → 不足 2×目标 时补位 */
+function mergeTiles(a, b){
+  const c = new Uint8Array(BITS);
+  for (let i = 0; i < BITS; i++) c[i] = a.bits[i] | b.bits[i];
+  const unionCount = popcount(c);
+  const target = a.value * 2;                 // 目标：1 的个数翻倍
+  const paddedIdx = [];
+  if (unionCount < target){
+    const free = [];
+    for (let i = 0; i < BITS; i++) if (!c[i]) free.push(i);
+    shuffle(free);
+    for (let k = 0; k < target - unionCount; k++){ c[free[k]] = 1; paddedIdx.push(free[k]); }
+  }
+  return { result: makeTile(c), unionCount: unionCount, padCount: paddedIdx.length, paddedIdx: paddedIdx };
+}
+
+/** 随机新格：90% 出 2 个 1，10% 出 4 个 1 */
+function randomTile(){
+  const v = Math.random() < 0.9 ? 2 : 4;
+  const bits = new Uint8Array(BITS);
+  const idx = shuffle([...Array(BITS).keys()]).slice(0, v);
+  for (const i of idx) bits[i] = 1;
+  return makeTile(bits);
+}
+
+/** 当前棋盘上的满格（64 个 1）数量 */
+function fullCount(){
+  let n = 0;
+  for (const t of grid) if (t && t.value === 64) n++;
+  return n;
+}
+
+/** 生成一份「全 1」的 64 位寄存器 */
+function fullBits(){
+  const bits = new Uint8Array(BITS);
+  bits.fill(1);
+  return bits;
+}
+
+/** 补位：把这格直接补满到 64 个 1（终局补位机制，保留原 id） */
+function topUpTile(tile){
+  return { id: tile.id, bits: fullBits(), value: 64 };
+}
+
+/** 新格生成：满格堆积到阈值后进入「终局补位」，新格直接补满 64 个 1 */
+function spawnTile(){
+  if (fullCount() >= FULL_THRESHOLD){
+    return makeTile(fullBits());
+  }
+  return randomTile();
+}
+
+/** 初始 16 格：随机点阵，且互不冲突（任意两格比特串不相同） */
+function randomInitialGrid(){
+  const g = new Array(SLOT_COUNT).fill(null);
+  const seen = new Set();
+  for (let i = 0; i < SLOT_COUNT; i++){
+    let t, key, guard = 0;
+    do {
+      t = randomTile();
+      key = Array.from(t.bits).join('');
+      guard++;
+    } while (seen.has(key) && guard < 500);
+    seen.add(key);
+    g[i] = t;
+  }
+  return g;
+}
+
+function shuffle(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+/* ==========================================================================
+   三、移动 + 合并（两阶段算法）
+   阶段 1「移动」：按方向把非空瓦片收集成一条线（从目标端到远端）
+   阶段 2「合并」：在线上从近到远两两配对，**每个瓦片每步只参与一次合并**
+   ========================================================================== */
+
+/** 按方向取第 line 条线上的第 k 个格子索引（k=0 为目标端） */
+function cellIndex(line, k, dir){
+  if (dir === 'left')  return line * SIZE + k;
+  if (dir === 'right') return line * SIZE + (SIZE - 1 - k);
+  if (dir === 'up')    return k * SIZE + line;
+  return (SIZE - 1 - k) * SIZE + line;   // down
+}
+
+/** 计算一次移动后的棋盘；不修改原状态 */
+function computeMove(dir){
+  const next = new Array(SLOT_COUNT).fill(null);
+  const movers = [];   // 平移（未参与合并）的瓦片
+  const merges = [];   // 参与合并的瓦片
+
+  for (let line = 0; line < SIZE; line++){
+    // —— 阶段 1：移动（收集非空瓦片并压缩到近端）
+    const cells = [];
+    for (let k = 0; k < SIZE; k++){
+      const idx = cellIndex(line, k, dir);
+      if (grid[idx]) cells.push({ idx: idx, tile: grid[idx] });
+    }
+    if (cells.length === 0) continue;
+
+    // —— 阶段 2：合并（两两配对，每瓦片每步只被合并一次）
+    const out = [];      // 合并后的瓦片序列（顺序 = 从近到远）
+    let i = 0;
+    while (i < cells.length){
+      const cur = cells[i];
+      const nxt = cells[i + 1];
+      // 只有数值相同且合并后不超过 64 位（value ≤ 32）才可合并
+      if (nxt && nxt.tile.value === cur.tile.value && cur.tile.value < 64){
+        const m = mergeTiles(cur.tile, nxt.tile);
+        const toIdx = cellIndex(line, out.length, dir);
+        out.push(m.result);
+        merges.push({
+          aTile: cur.tile, bTile: nxt.tile, aIdx: cur.idx, bIdx: nxt.idx,
+          result: m.result, toIdx: toIdx,
+          unionCount: m.unionCount, padCount: m.padCount, paddedIdx: m.paddedIdx,
+          bitsA: cur.tile.bits, bitsB: nxt.tile.bits, bitsC: m.result.bits
+        });
+        i += 2;                                   // 关键：一次跳过两个，本瓦片不再参与本次合并
+      } else {
+        out.push(cur.tile);
+        i += 1;
+      }
+    }
+
+    // —— 回填到目标格
+    for (let k = 0; k < SIZE; k++){
+      const idx = cellIndex(line, k, dir);
+      if (k < out.length){
+        next[idx] = out[k];
+        const isMergeTarget = merges.some(m => m.toIdx === idx);
+        if (!isMergeTarget) movers.push({ tile: out[k], toIdx: idx });
+      }
+    }
+  }
+
+  const changed = next.some((t, i) => t !== grid[i]);
+  return { next: next, movers: movers, merges: merges, changed: changed };
+}
+
+/* ==========================================================================
+   四、渲染
+   ========================================================================== */
+
+function renderCells(){
+  // 静态格子背景（16 个）—— 始终插到瓦片下面（DOM 顺序 + z-index 双保险）
+  boardEl.querySelectorAll('.cell').forEach(n => n.remove());
+  const geo = boardGeo();
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < SLOT_COUNT; i++){
+    const c = document.createElement('div');
+    c.className = 'cell';
+    positionEl(c, geo, i);
+    frag.appendChild(c);
+  }
+  boardEl.insertBefore(frag, boardEl.firstChild);
+}
+
+function boardGeo(){
+  const rect = boardEl.getBoundingClientRect();
+  const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
+  const pad = 10;
+  const inner = rect.width - pad * 2;
+  const size = (inner - gap * (SIZE - 1)) / SIZE;
+  return { size: size, gap: gap, pad: pad };
+}
+
+function positionEl(el, geo, idx){
+  const r = Math.floor(idx / SIZE), c = idx % SIZE;
+  el.style.width = geo.size + 'px';
+  el.style.height = geo.size + 'px';
+  el.style.left = (geo.pad + c * (geo.size + geo.gap)) + 'px';
+  el.style.top  = (geo.pad + r * (geo.size + geo.gap)) + 'px';
+}
+
+function positionTile(el, idx){
+  const geo = boardGeo();
+  const r = Math.floor(idx / SIZE), c = idx % SIZE;
+  el.style.transform = 'translate3d(' + (geo.pad + c * (geo.size + geo.gap)) + 'px,' + (geo.pad + r * (geo.size + geo.gap)) + 'px,0)';
+}
+
+function createTileEl(tile){
+  const wrap = document.createElement('div');
+  wrap.className = 'tile-wrap';
+  wrap.dataset.id = tile.id;
+  const inner = document.createElement('div');
+  inner.className = 'tile' + (tile.value === 64 ? ' t64' : '');
+  inner.dataset.id = tile.id;
+
+  const num = document.createElement('div');
+  num.className = 'tile-num';
+  num.textContent = tile.value;
+
+  const dots = document.createElement('div');
+  dots.className = 'tile-dots';
+  for (let i = 0; i < BITS; i++){
+    const d = document.createElement('i');
+    d.className = 'dot' + (tile.bits[i] ? ' on' : '');
+    dots.appendChild(d);
+  }
+  inner.appendChild(num);
+  inner.appendChild(dots);
+  wrap.appendChild(inner);
+  applyTileStyle(wrap, tile);
+  return wrap;
+}
+
+/** 按数值档位套用官方色阶（背景 / 文字 / 满格白点） */
+function applyTileStyle(el, tile){
+  const inner = el.querySelector('.tile');
+  inner.style.background = TIER_BG[tile.value] || '#FFFFFF';
+  inner.style.color = TIER_FG[tile.value] || '#000000';
+  inner.classList.toggle('t64', tile.value === 64);
+}
+
+function renderGrid(){
+  // 清空并重建（重开 / 演示时用）
+  tileEls.forEach(el => el.remove());
+  tileEls.clear();
+  grid.forEach((t, idx) => {
+    if (!t) return;
+    const el = createTileEl(t);
+    boardEl.appendChild(el);
+    tileEls.set(t.id, el);
+    positionTile(el, idx);
+  });
+  renderCells();
+}
+
+function updateTileEl(el, tile){
+  el.querySelector('.tile-num').textContent = tile.value;
+  el.querySelector('.tile-dots').querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (tile.bits[i] ? ' on' : '');
+  });
+  applyTileStyle(el, tile);
+  el.querySelector('.tile').classList.toggle('sel', tile.id === selectedId);
+}
+
+function updateStats(){
+  if (score > best){ best = score; saveBest(best); }   // 先结算最高分再刷新显示，避免显示滞后一拍
+  scoreEl.textContent = score;
+  bestEl.textContent = best;
+  stepsEl.textContent = steps;
+  const lit = grid.reduce((s, t) => s + (t ? t.value : 0), 0);
+  litCountEl.textContent = lit;
+  progressFill.style.width = (lit / TOTAL_BITS * 100).toFixed(2) + '%';
+}
+
+/* ==========================================================================
+   五、交互：键盘 / 触屏 / 按钮
+   ========================================================================== */
+
+function requestMove(dir){
+  if (over) return;
+  if (won && !hasMoves()) return;
+  moveQueue.push(dir);
+  if (!processing) processMoves();
+}
+
+async function processMoves(){
+  processing = true;
+  while (moveQueue.length){
+    const dir = moveQueue.shift();
+    await doMove(dir);
+    if (over) break;
+  }
+  processing = false;
+}
+
+function wait(ms){
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function doMove(dir){
+  // 移动时若正在放演出，先收起，避免遮挡
+  if (showing){ showQueue = []; hideMergeOverlay(); }
+
+  const res = computeMove(dir);
+  if (!res.changed){
+    boardEl.classList.remove('shake');
+    void boardEl.offsetWidth;
+    boardEl.classList.add('shake');
+    return;
+  }
+
+  steps++;
+  const before = grid;
+  grid = res.next;
+
+  // —— 视觉：未合并的瓦片滑动到新位置
+  for (const mv of res.movers){
+    const el = tileEls.get(mv.tile.id);
+    if (el) positionTile(el, mv.toIdx);
+  }
+  // —— 视觉：合并双方滑向目标格 / 淡出
+  for (const mg of res.merges){
+    const aEl = tileEls.get(mg.aTile.id);
+    const bEl = tileEls.get(mg.bTile.id);
+    if (aEl) positionTile(aEl, mg.toIdx);
+    if (bEl) bEl.querySelector('.tile').classList.add('fade');
+  }
+
+  await wait(180);
+
+  // —— 合并落定：A 元素换成结果瓦片（pop），B 元素移除
+  for (const mg of res.merges){
+    const aEl = tileEls.get(mg.aTile.id);
+    const bEl = tileEls.get(mg.bTile.id);
+    if (aEl) aEl.remove();
+    if (bEl) bEl.remove();
+    tileEls.delete(mg.aTile.id);
+    tileEls.delete(mg.bTile.id);
+
+    const el = createTileEl(mg.result);
+    el.querySelector('.tile').classList.add('pop');
+    boardEl.appendChild(el);
+    tileEls.set(mg.result.id, el);
+    positionTile(el, mg.toIdx);
+    el.addEventListener('animationend', function h(){ el.querySelector('.tile').classList.remove('pop'); el.removeEventListener('animationend', h); });
+
+    // 分数：合并得分 = 新瓦片数值；补位每位额外 +5 分
+    score += mg.result.value + mg.padCount * 5;
+
+    // 记录合并历史（可回看）
+    mergeLog.unshift({
+      step: steps, a: mg.aTile, b: mg.bTile, result: mg.result,
+      unionCount: mg.unionCount, padCount: mg.padCount,
+      bitsA: mg.bitsA, bitsB: mg.bitsB, bitsC: mg.bitsC, paddedIdx: mg.paddedIdx
+    });
+    if (mergeLog.length > 40) mergeLog.pop();
+  }
+
+  // —— 生成新格
+  const empty = [];
+  for (let i = 0; i < SLOT_COUNT; i++) if (!grid[i]) empty.push(i);
+  if (empty.length){
+    const idx = empty[Math.floor(Math.random() * empty.length)];
+    const t = spawnTile();
+    grid[idx] = t;
+    const el = createTileEl(t);
+    el.querySelector('.tile').classList.add('pop');
+    boardEl.appendChild(el);
+    tileEls.set(t.id, el);
+    positionTile(el, idx);
+    el.addEventListener('animationend', function h(){ el.querySelector('.tile').classList.remove('pop'); el.removeEventListener('animationend', h); });
+  }
+
+  updateStats();
+  renderOpPanel();
+  if (selectedId !== null) renderDecodePanel();
+
+  // —— 合并演出（第一条进队列，其余排队）
+  for (const mg of res.merges){
+    showMerge({
+      a: mg.aTile, b: mg.bTile, result: mg.result,
+      unionCount: mg.unionCount, padCount: mg.padCount,
+      bitsA: mg.bitsA, bitsB: mg.bitsB, bitsC: mg.bitsC, paddedIdx: mg.paddedIdx
+    });
+  }
+
+  // —— 胜利 / 结束判定
+  if (checkVictory()){ triggerVictory(); return; }
+  if (!hasMoves()){
+    over = true;
+    showBanner('没有可移动的格子了 —— 游戏结束。点击未满的格子可执行「终局补位」把它补满，或点「重开一局」。', true);
+  }
+}
+
+/* 终局补位：把一格直接补满到 64 个 1（沿用本作的「补位」语言） */
+function doTopUp(tile){
+  const idx = grid.indexOf(tile);
+  if (idx < 0 || tile.value >= 64) return;
+  const el = tileEls.get(tile.id);
+  const dots = el ? el.querySelectorAll('.tile-dots .dot') : null;
+  const zeros = [];
+  for (let i = 0; i < BITS; i++) if (!tile.bits[i]) zeros.push(i);
+  shuffle(zeros);
+  const newBits = new Uint8Array(BITS);
+  newBits.set(tile.bits);
+  const need = zeros.length;
+
+  zeros.forEach(function(z, k){
+    setTimeout(function(){
+      newBits[z] = 1;
+      if (dots){
+        dots[z].classList.add('on', 'popin');
+        setTimeout(function(){ dots[z].classList.remove('popin'); }, 300);
+      }
+    }, k * 22);
+  });
+
+  setTimeout(function(){
+    const nt = topUpTile(tile);
+    grid[idx] = nt;
+    if (el){ updateTileEl(el, nt); tileEls.set(nt.id, el); }
+    score += need * 5;
+    updateStats();
+    renderOpPanel();
+    if (selectedId !== null) renderDecodePanel();
+    if (checkVictory()){
+      triggerVictory();
+    } else {
+      showBanner('已补位 ' + need + ' 位 —— 该格现在是满格（64 个 1）。', false);
+      if (!hasMoves()){
+        over = true;
+        showBanner('还剩未满的格子：点击它执行「终局补位」补满，或点「重开一局」。', true);
+      }
+    }
+  }, need * 22 + 140);
+}
+
+function hasMoves(){
+  for (let i = 0; i < SLOT_COUNT; i++){
+    if (!grid[i]) return true;                 // 还有空位 → 可移动
+  }
+  for (let i = 0; i < SLOT_COUNT; i++){
+    const a = grid[i];
+    if (!a) continue;
+    if (a.value >= 64) continue;              // 64 个 1 已满，无法再翻倍
+    const r = Math.floor(i / SIZE), c = i % SIZE;
+    if (c + 1 < SIZE && grid[i + 1] && grid[i + 1].value === a.value) return true;
+    if (r + 1 < SIZE && grid[i + SIZE] && grid[i + SIZE].value === a.value) return true;
+  }
+  return false;
+}
+
+function checkVictory(){
+  return grid.every(t => t && t.value === 64);
+}
+
+function showBanner(text, isOver){
+  bannerEl.textContent = text;
+  bannerEl.classList.toggle('over', !!isOver);
+  bannerEl.hidden = false;
+}
+function hideBanner(){ bannerEl.hidden = true; }
+
+/* —— 键盘 —— */
+document.addEventListener('keydown', function(e){
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;      // 输入框内不劫持方向键
+  let dir = null;
+  const k = e.key;
+  if (k === 'ArrowLeft'  || k === 'a' || k === 'A') dir = 'left';
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') dir = 'right';
+  else if (k === 'ArrowUp'   || k === 'w' || k === 'W') dir = 'up';
+  else if (k === 'ArrowDown' || k === 's' || k === 'S') dir = 'down';
+  if (dir){ e.preventDefault(); requestMove(dir); }
+});
+
+/* —— 触屏滑动 —— */
+let touchStart = null;
+boardEl.addEventListener('touchstart', function(e){
+  const t = e.changedTouches[0];
+  touchStart = { x: t.clientX, y: t.clientY, t: Date.now() };
+}, { passive: true });
+boardEl.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
+boardEl.addEventListener('touchend', function(e){
+  if (!touchStart) return;
+  const t  = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  touchStart = null;
+  if (Math.max(adx, ady) < 24) return;         // 位移过小视为点击
+  if (adx > ady) requestMove(dx > 0 ? 'right' : 'left');
+  else           requestMove(dy > 0 ? 'down'  : 'up');
+}, { passive: true });
+/* 桌面端鼠标拖拽也支持滑动 */
+let mouseStart = null;
+boardEl.addEventListener('mousedown', function(e){
+  if (e.button !== 0) return;
+  mouseStart = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', function(e){
+  if (!mouseStart) return;
+  const dx = e.clientX - mouseStart.x, dy = e.clientY - mouseStart.y;
+  mouseStart = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  if (Math.abs(dx) > Math.abs(dy)) requestMove(dx > 0 ? 'right' : 'left');
+  else                               requestMove(dy > 0 ? 'down'  : 'up');
+});
+
+/* —— 方向按钮 —— */
+document.querySelectorAll('.dpad .btn').forEach(function(btn){
+  btn.addEventListener('click', function(){ requestMove(btn.dataset.dir); });
+});
+
+/* —— 点击格子 → 解读面板（结束态下点击未满格 = 执行终局补位） —— */
+boardEl.addEventListener('click', function(e){
+  const tileEl = e.target.closest ? e.target.closest('.tile-wrap') : null;
+  if (!tileEl) return;
+  const id = parseInt(tileEl.dataset.id, 10);
+  const tile = grid.find(function(x){ return x && x.id === id; });
+  if (!tile) return;
+
+  selectedId = (selectedId === id) ? null : id;
+  updateSelection();
+  renderDecodePanel();
+
+  if (over && tile.value < 64){
+    doTopUp(tile);
+  }
+});
+
+function updateSelection(){
+  grid.forEach(function(t, idx){
+    if (!t) return;
+    const el = tileEls.get(t.id);
+    if (el) el.querySelector('.tile').classList.toggle('sel', t.id === selectedId);
+  });
+}
+
+/* ==========================================================================
+   六、64 位解读面板
+   ========================================================================== */
+function renderDecodePanel(){
+  const t = grid.find(x => x && x.id === selectedId);
+  if (!t){
+    decodeBody.innerHTML = '<p class="empty-tip">点击棋盘里的任意一格，<br>这里会把这串 64 位比特解码成十进制 / IPv6 / HEX / 时间戳。</p>';
+    return;
+  }
+  const idx = grid.indexOf(t);
+  const row = Math.floor(idx / SIZE) + 1, col = idx % SIZE + 1;
+  const val  = bitsToBigInt(t.bits);
+  const ipv6 = bitsToIPv6(t.bits);
+  const bytes = bitsToBytes(t.bits);
+  const hex   = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+  const ascii = bytes.map(byteToAscii).join('');
+  const ts    = bitsToTimestamp(t.bits);
+
+  decodeBody.innerHTML =
+    '<dl class="kv">' +
+      '<dt>槽位</dt><dd>#' + (idx + 1) + '（第 ' + row + ' 行 · 第 ' + col + ' 列）</dd>' +
+      '<dt>本槽 1</dt><dd>' + t.value + ' 个 1（数值 ' + t.value + '，位号 #' + (63 - t.bits.indexOf(1)) + ' 起）</dd>' +
+      '<dt>uint64</dt><dd>' + val.toString() + '</dd>' +
+      '<dt>IPv6</dt><dd>' + ipv6 + '</dd>' +
+      '<dt>8 字节 HEX</dt><dd>' + hex + '</dd>' +
+      '<dt>ASCII</dt><dd>' + ascii + '</dd>' +
+      '<dt>纳秒时间戳</dt><dd>' + ts.text + '</dd>' +
+      '<dt>纳秒原值</dt><dd>' + ts.ns + ' ns</dd>' +
+      '<dt>在 1024 位中</dt><dd>第 ' + (idx + 1) + ' / 16 槽 · 贡献 ' + t.value + ' 个 1 · 累计点亮 ' +
+        (grid.slice(0, idx + 1).reduce((s, x) => s + (x ? x.value : 0), 0)) + ' / 1024</dd>' +
+    '</dl>' +
+    '<p class="hint">位序：索引 0 = 最高位（2⁶³），索引 63 = 最低位（2⁰）；每 8 位 = 1 字节（高位在前）。' +
+    'IPv6 采用接口标识符写法：64 位放在<b>低 64 位</b>（后 4 组），前 4 组左补 0000。</p>';
+}
+
+/* ==========================================================================
+   七、合并演出（A OR B = C）
+   ========================================================================== */
+function makeMatrix(el){
+  el.innerHTML = '';
+  const dots = [];
+  for (let i = 0; i < BITS; i++){
+    const d = document.createElement('i');
+    d.className = 'dot';
+    el.appendChild(d);
+    dots.push(d);
+  }
+  return {
+    set(bits, clsFn){
+      dots.forEach(function(d, i){
+        const c = bits[i] ? (clsFn ? clsFn(i) : 'on') : '';
+        d.className = 'dot' + (c ? ' ' + c : '');
+      });
+    },
+    setOne(i, cls){
+      dots[i].className = 'dot' + (cls ? ' ' + cls : '');
+    },
+    clear(){ dots.forEach(d => { d.className = 'dot'; }); }
+  };
+}
+
+const matAView = makeMatrix(matA);
+const matBView = makeMatrix(matB);
+const matCView = makeMatrix(matC);
+
+function showMerge(ev){
+  showQueue.push(ev);
+  if (!showing) nextShow();
+}
+
+function nextShow(){
+  animTimers.forEach(clearTimeout);
+  animTimers = [];
+  if (!showQueue.length){ hideMergeOverlay(); showing = false; return; }
+  showing = true;
+  const ev = showQueue.shift();
+  renderMergeOverlay(ev);
+  showTimer = setTimeout(nextShow, 3400);
+}
+
+function hideMergeOverlay(){
+  mergeOverlay.hidden = true;
+  if (showTimer){ clearTimeout(showTimer); showTimer = null; }
+  animTimers.forEach(clearTimeout);
+  animTimers = [];
+}
+
+function renderMergeOverlay(ev){
+  mergeOverlay.hidden = false;
+  matAView.set(ev.bitsA, null);
+  matBView.set(ev.bitsB, null);
+
+  // C 先只显示"并集"，补位的新点稍后逐个弹出
+  const paddedSet = new Set(ev.paddedIdx);
+  matCView.clear();
+  for (let i = 0; i < BITS; i++){
+    if (!ev.bitsC[i]) continue;
+    if (paddedSet.has(i)) continue;                       // 补位点先不亮
+    const inA = !!ev.bitsA[i], inB = !!ev.bitsB[i];
+    const cls = (inA && inB) ? 'u-both' : (inA ? 'u-a' : 'u-b');
+    matCView.setOne(i, cls);
+  }
+
+  opNote.textContent = '并集 ' + ev.unionCount + ' 位' + (ev.padCount ? '，需补 ' + ev.padCount + ' 位' : '，无需补位');
+  opPadBadge.textContent = '补 ' + ev.padCount + ' 位';
+
+  // 逐个弹出补位点
+  ev.paddedIdx.forEach(function(idx, k){
+    animTimers.push(setTimeout(function(){
+      matCView.setOne(idx, 'pad anim');
+      const left = ev.padCount - (k + 1);
+      opPadBadge.textContent = left > 0 ? ('补 ' + left + ' 位') : '已补齐';
+      if (left === 0){
+        opNote.textContent = 'A OR B = C：' + ev.unionCount + ' 位并集 + ' + ev.padCount + ' 位补位 = ' + ev.result.value + ' 个 1';
+      }
+    }, 750 + k * 170));
+  });
+  if (!ev.padCount){
+    opNote.textContent = 'A OR B = C：' + ev.unionCount + ' 位并集 = ' + ev.result.value + ' 个 1（无需补位）';
+  }
+}
+
+$('opNext').addEventListener('click', function(){
+  if (showTimer) clearTimeout(showTimer);
+  nextShow();
+});
+
+/* —— 侧栏「运算过程」 —— */
+
+/** 开局示例运算（玩家还没产生真实合并时展示）：4 OR 4 = 8（并集 6 位 → 补 2 位） */
+function demoMergeEvent(){
+  const a = new Uint8Array(BITS), b = new Uint8Array(BITS);
+  [0, 9, 18, 27].forEach(function(i){ a[i] = 1; });     // A：4 个 1
+  [0, 9, 40, 55].forEach(function(i){ b[i] = 1; });     // B：4 个 1
+  const m = mergeTiles({ bits: a, value: 4 }, { bits: b, value: 4 });
+  return {
+    a: { value: 4 }, b: { value: 4 }, result: { value: m.result.value },
+    unionCount: m.unionCount, padCount: m.padCount,
+    bitsA: a, bitsB: b, bitsC: m.result.bits, paddedIdx: m.paddedIdx,
+    isDemo: true
+  };
+}
+
+function renderOpPanel(){
+  const isDemo = mergeLog.length === 0;
+  const e = isDemo ? demoMergeEvent() : mergeLog[0];
+  const hex = bitsToBytes(e.bitsC).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+
+  let html = (isDemo ? '<span class="demo-flag">示例 —— 点棋盘任意方向，开始你自己的第一次合并</span>' : '') +
+    '<div class="op-view">' +
+      '<div class="op-item"><div class="op-cap">A（' + e.a.value + '）</div><div class="matrix" id="mA2"></div></div>' +
+      '<div class="op-sym">OR</div>' +
+      '<div class="op-item"><div class="op-cap">B（' + e.b.value + '）</div><div class="matrix" id="mB2"></div></div>' +
+      '<div class="op-sym">=</div>' +
+      '<div class="op-item"><div class="op-cap">C（' + e.result.value + '）</div><div class="matrix" id="mC2"></div></div>' +
+    '</div>' +
+    '<p class="op-line">' + (isDemo ? '示例：' : '第 ' + e.step + ' 步：') + e.a.value + ' OR ' + e.b.value + ' → <b>' + e.result.value + '</b> 个 1' +
+      (e.padCount ? '　<span class="badge-pad">补 ' + e.padCount + ' 位</span>' : '　<span class="badge-pad">无需补位</span>') +
+    '</p>' +
+    '<p class="op-line mono" style="font-size:11px;color:var(--ink-2)">C = ' + hex + '</p>' +
+    '<div class="btn-row" style="margin-top:8px"><button class="btn ghost" id="btnReplay" style="font-size:12px;padding:6px 12px">' +
+      (isDemo ? '重看示例演出' : '重看这次演出') + '</button></div>';
+
+  if (!isDemo){
+    const logHtml = mergeLog.slice(0, 12).map(function(it, i){
+      return '<div class="log-item" data-li="' + i + '"><span class="li-step">第 ' + it.step + ' 步</span>' +
+             '<span>' + it.a.value + ' OR ' + it.b.value + ' → ' + it.result.value +
+             (it.padCount ? '（补 ' + it.padCount + '）' : '') + '</span></div>';
+    }).join('');
+    html += '<div class="log">' + logHtml + '</div>';
+  }
+  opBody.innerHTML = html;
+
+  // 填充三个小矩阵
+  const vA = makeMatrix($('mA2')), vB = makeMatrix($('mB2')), vC = makeMatrix($('mC2'));
+  vA.set(e.bitsA, null);
+  vB.set(e.bitsB, null);
+  const paddedSet = new Set(e.paddedIdx);
+  for (let i = 0; i < BITS; i++){
+    if (!e.bitsC[i]) continue;
+    if (paddedSet.has(i)){ vC.setOne(i, 'pad'); continue; }
+    const inA = !!e.bitsA[i], inB = !!e.bitsB[i];
+    vC.setOne(i, (inA && inB) ? 'u-both' : (inA ? 'u-a' : 'u-b'));
+  }
+
+  $('btnReplay').addEventListener('click', function(){
+    showMerge({ a: e.a, b: e.b, result: e.result, unionCount: e.unionCount, padCount: e.padCount,
+                bitsA: e.bitsA, bitsB: e.bitsB, bitsC: e.bitsC, paddedIdx: e.paddedIdx });
+  });
+  opBody.querySelectorAll('.log-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      const it = mergeLog[parseInt(item.getAttribute('data-li'), 10)];
+      if (!it) return;
+      showMerge({ a: it.a, b: it.b, result: it.result, unionCount: it.unionCount, padCount: it.padCount,
+                  bitsA: it.bitsA, bitsB: it.bitsB, bitsC: it.bitsC, paddedIdx: it.paddedIdx });
+    });
+  });
+}
+
+/* ==========================================================================
+   八、胜利演出：1024 点位图 + 荧光绿笔刷 + 像素吉祥物 + 绿色 bokeh
+   ========================================================================== */
+function buildBitmapDom(){
+  bitmapEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < TOTAL_BITS; i++){
+    const b = document.createElement('i');
+    b.className = 'b';
+    frag.appendChild(b);
+  }
+  bitmapEl.appendChild(frag);
+}
+function paintBitmap(){
+  const cells = bitmapEl.children;
+  let k = 0;
+  for (let i = 0; i < SLOT_COUNT; i++){
+    const t = grid[i];
+    if (!t) { k += 64; continue; }
+    for (let j = 0; j < BITS; j++, k++){
+      cells[k].className = 'b' + (t.bits[j] ? ' on' : '');
+    }
+  }
+}
+
+function buildMascot(){
+  /* 像素吉祥物：黑方块脸 + 双白像素眼 + 一枚绿色像素点 */
+  const art = [
+    '........',
+    '.#######',
+    '.#######',
+    '.#WW#WW#',
+    '.#WW#WW#',
+    '.####G##',
+    '.#######',
+    '.#######'
+  ];
+  mascotEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (const row of art){
+    for (const ch of row){
+      const p = document.createElement('i');
+      p.className = 'px' + (ch === '#' ? ' face' : (ch === 'W' ? ' eye' : (ch === 'G' ? ' dot' : '')));
+      frag.appendChild(p);
+    }
+  }
+  mascotEl.appendChild(frag);
+}
+
+/* —— bokeh 粒子 —— */
+const bokeh = { raf: 0, parts: [], ctx: null };
+function startBokeh(){
+  const cv = $('bokehCanvas');
+  bokeh.ctx = cv.getContext('2d');
+  if (!bokeh.ctx) return;
+  const resize = function(){
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.floor(r.width * dpr));
+    cv.height = Math.max(1, Math.floor(r.height * dpr));
+    bokeh.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+  bokeh.parts = [];
+  const colors = ['#79B446', '#73F99A'];
+  for (let i = 0; i < 28; i++){
+    bokeh.parts.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 6 + Math.random() * 26,
+      v: 0.15 + Math.random() * 0.5,
+      a: 0.10 + Math.random() * 0.26,
+      c: colors[i % 2]
+    });
+  }
+  const tick = function(){
+    const ctx = bokeh.ctx;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (const p of bokeh.parts){
+      p.y -= p.v;
+      if (p.y + p.r < 0){ p.y = window.innerHeight + p.r; p.x = Math.random() * window.innerWidth; }
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, p.c);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = p.a;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    bokeh.raf = requestAnimationFrame(tick);
+  };
+  cancelAnimationFrame(bokeh.raf);
+  bokeh.raf = requestAnimationFrame(tick);
+}
+function stopBokeh(){
+  cancelAnimationFrame(bokeh.raf);
+  bokeh.raf = 0;
+  if (bokeh.ctx) bokeh.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+}
+
+function triggerVictory(){
+  if (won) return;
+  won = true;
+  score += TOTAL_BITS;                        // 胜利奖励
+  updateStats();
+  paintBitmap();
+  $('vScore').textContent = score;
+  $('vSteps').textContent = steps;
+  if (!vNick.value) vNick.value = nickInput.value;
+  victoryOverlay.hidden = false;
+  startBokeh();
+  unlockCard();
+  showBanner('🎉 1024 个位全部点亮！16 格全部达成 64 个 1。', false);
+}
+$('btnCloseVictory').addEventListener('click', function(){
+  victoryOverlay.hidden = true;
+  stopBokeh();
+});
+
+/* ==========================================================================
+   九、成就卡（Canvas → PNG）
+   ========================================================================== */
+function unlockCard(){
+  btnCard.disabled = false;
+  $('cardHint').textContent = '已解锁：点击按钮导出「1024 位全 1 寄存器」成就卡 PNG（含 1024 点位图 / 昵称 / 步数 / 分数 / 日期）。';
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  if (typeof ctx.roundRect === 'function'){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawMascotOnCanvas(ctx, x, y, px){
+  const art = [
+    '........',
+    '.#######',
+    '.#######',
+    '.#WW#WW#',
+    '.#WW#WW#',
+    '.####G##',
+    '.#######',
+    '.#######'
+  ];
+  for (let r = 0; r < art.length; r++){
+    for (let c = 0; c < art[r].length; c++){
+      const ch = art[r][c];
+      if (ch === '.') continue;
+      ctx.fillStyle = (ch === '#') ? '#000000' : (ch === 'W' ? '#FFFFFF' : '#73F99A');
+      ctx.fillRect(x + c * px, y + r * px, px, px);
+    }
+  }
+}
+
+function buildCardCanvas(){
+  const W = 1200, H = 900, S = 2;
+  const cv = document.createElement('canvas');
+  cv.width = W * S; cv.height = H * S;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return null;
+  ctx.scale(S, S);
+
+  // 背景：页面底色 + 方格纸纹
+  ctx.fillStyle = '#F4F8F9';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 20){ ctx.beginPath(); ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 20){ ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke(); }
+
+  // 白卡 + 3px 黑描边
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.18)';
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 6;
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, 50, 46, W - 100, H - 92, 28);
+  ctx.fill();
+  ctx.restore();
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#000000';
+  roundRect(ctx, 50, 46, W - 100, H - 92, 28);
+  ctx.stroke();
+
+  // 标题贴纸（浅绿填充 + 3px 黑描边 + 2° 旋转）
+  ctx.save();
+  ctx.translate(W / 2, 128);
+  ctx.rotate(-2 * Math.PI / 180);
+  ctx.fillStyle = '#D7FCAE';
+  roundRect(ctx, -300, -40, 600, 78, 18);
+  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#000000';
+  ctx.stroke();
+  ctx.fillStyle = '#000000';
+  ctx.font = '900 44px "Arial Black","PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('1024 位全 1 寄存器', 0, 2);
+  ctx.restore();
+
+  ctx.fillStyle = '#000000';
+  ctx.font = '800 22px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('16 个 64 位槽位 × 64 个 1 = 1024 个位全部点亮', W / 2, 188);
+
+  // 32×32 = 1024 点位图
+  const cell = 19, gap = 3, gridSize = 32 * cell + 31 * gap;
+  const ox = (W - gridSize) / 2, oy = 216;
+  const grad = ctx.createLinearGradient(ox, oy, ox + gridSize, oy + gridSize);
+  grad.addColorStop(0, '#D7FCAE');
+  grad.addColorStop(0.45, '#90CC78');
+  grad.addColorStop(1, '#6CA83C');
+  ctx.fillStyle = grad;
+  for (let r = 0; r < 32; r++){
+    for (let c = 0; c < 32; c++){
+      ctx.fillRect(ox + c * (cell + gap), oy + r * (cell + gap), cell, cell);
+    }
+  }
+  // 绿色描边与光晕
+  ctx.save();
+  ctx.shadowColor = '#73F99A';
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = '#73F99A';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(ox - 6, oy - 6, gridSize + 12, gridSize + 12);
+  ctx.restore();
+
+  // 吉祥物
+  drawMascotOnCanvas(ctx, 92, oy + gridSize - 108, 14);
+
+  // 统计数据
+  const nick = (nickInput.value || '匿名工程师').slice(0, 16);
+  const now = new Date();
+  const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') +
+                  ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const items = [
+    ['昵称', nick],
+    ['步数', String(steps)],
+    ['分数', String(score)],
+    ['点亮位数', '1024 / 1024'],
+    ['达成时间', dateStr]
+  ];
+  const lineY = oy + gridSize + 46;
+  ctx.textAlign = 'left';
+  let x = 108;
+  items.forEach(function(it, i){
+    if (i === 3 || i === 4){ x = 108; }
+    ctx.fillStyle = '#5A6B5C';
+    ctx.font = '800 17px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText(it[0], x, lineY + (i >= 3 ? 34 : 0));
+    ctx.fillStyle = '#000000';
+    ctx.font = '900 24px "Arial Black","PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText(it[1], x + 78, lineY + (i >= 3 ? 34 : 0));
+    if (i < 2) x += 250;
+  });
+
+  // 底部落款
+  ctx.fillStyle = '#000000';
+  ctx.font = '800 15px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('1024 位运算 · Bit Lab　|　TRAE 社区 1024 狂欢周作品秀', W - 76, H - 74);
+
+  return cv;
+}
+
+function downloadCard(){
+  const cv = buildCardCanvas();
+  if (!cv) return;
+  let url = '';
+  try {
+    url = cv.toDataURL('image/png');
+  } catch (err){
+    showBanner('成就卡导出失败：' + (err && err.message ? err.message : '未知错误'), true);
+    return;
+  }
+  const nick = (nickInput.value || '匿名工程师').replace(/[\\/:*?"<>|]/g, '_').slice(0, 16);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '1024位全1寄存器-' + nick + '.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+btnCard.addEventListener('click', downloadCard);
+btnCard2.addEventListener('click', downloadCard);
+nickInput.addEventListener('input', function(){ if (vNick) vNick.value = nickInput.value; });
+vNick.addEventListener('input', function(){ nickInput.value = vNick.value; });
+
+/* ==========================================================================
+   十、持久化（localStorage 最高分）
+   ========================================================================== */
+function loadStore(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    best = Number(o.best) || 0;
+    nickInput.value = typeof o.nick === 'string' ? o.nick : '';
+    if (vNick) vNick.value = nickInput.value;
+    updateStats();                      // 读档后立刻刷新显示（等价于刷新页面时的表现）
+  } catch (err){
+    best = 0;                                   // 隐私模式等异常时静默降级
+  }
+}
+function saveBest(v){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ best: v, nick: nickInput.value, at: Date.now() }));
+  } catch (err){ /* 忽略：无痕模式写不进去不影响游戏 */ }
+}
+
+/* ==========================================================================
+   十一、启动 / 重开 / 演示
+   ========================================================================== */
+function restart(){
+  over = false; won = false;
+  score = 0; steps = 0; selectedId = null;
+  mergeLog = []; showQueue = []; showing = false;
+  hideMergeOverlay();
+  hideBanner();
+  victoryOverlay.hidden = true;
+  stopBokeh();
+  grid = randomInitialGrid();
+  renderGrid();
+  updateStats();
+  renderOpPanel();
+  renderDecodePanel();
+  btnCard.disabled = true;
+  $('cardHint').textContent = '达成胜利（16 格全部 64 个 1）后解锁成就卡。';
+}
+$('btnRestart').addEventListener('click', restart);
+
+$('btnDemo').addEventListener('click', function(){
+  // 演示模式：直接把 16 格填成全 1，用于预览胜利画面与成就卡
+  restart();
+  for (let i = 0; i < SLOT_COUNT; i++){
+    const bits = new Uint8Array(BITS);
+    bits.fill(1);
+    grid[i] = makeTile(bits);
+  }
+  renderGrid();
+  updateStats();
+  triggerVictory();
+});
+
+/* 布局自适应 */
+function relayout(){
+  const geo = boardGeo();
+  document.documentElement.style.setProperty('--tile', geo.size + 'px');
+  renderCells();
+  grid.forEach(function(t, idx){
+    if (!t) return;
+    const el = tileEls.get(t.id);
+    if (el) positionTile(el, idx);
+  });
+}
+window.addEventListener('resize', relayout);
+window.addEventListener('orientationchange', function(){ setTimeout(relayout, 200); });
+
+/* 初始化 */
+buildBitmapDom();
+buildMascot();
+loadStore();
+restart();
+relayout();
+
+/* 自测 / 自动化用的只读状态快照（不影响玩法） */
+window.__bitlab = {
+  get grid(){ return grid.map(function(t){ return t ? { value: t.value, bits: Array.from(t.bits) } : null; }); },
+  get score(){ return score; },
+  get best(){ return best; },
+  get steps(){ return steps; },
+  get lit(){ return grid.reduce(function(s, t){ return s + (t ? t.value : 0); }, 0); },
+  get won(){ return won; },
+  get over(){ return over; },
+  get full(){ return fullCount(); },
+  get mergeLog(){ return mergeLog.length; },
+  decode: bitsToBigInt, ipv6: bitsToIPv6, bytes: bitsToBytes, ts: bitsToTimestamp,
+  buildCard: buildCardCanvas, loadStore: loadStore
+};
+window.__won = function(){ return won; };
+</script>
+</body>
+</html>

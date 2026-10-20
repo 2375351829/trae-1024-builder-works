@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1024 Builder 作品集 · TRAE 社区 1024 狂欢周</title>
+<style>
+:root{--paper:#F4F8F9;--accent:#D7FCAE;--accent2:#CCFC9C;--brand:#73F99A;--ink:#000;--ink2:#5A6B5C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);padding:28px 16px 60px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.035) 0 2px,transparent 2px 20px),repeating-linear-gradient(90deg,rgba(0,0,0,.035) 0 2px,transparent 2px 20px)}
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto}
+h1{font-family:"Arial Black","Segoe UI Black",sans-serif;font-weight:900;font-size:clamp(26px,6vw,44px);margin:0 0 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.badge{display:inline-block;background:var(--accent);border:3px solid var(--ink);border-radius:12px;padding:2px 12px;transform:rotate(-2deg);font-family:"Arial Black",sans-serif;font-size:.4em;letter-spacing:1px;box-shadow:3px 3px 0 rgba(0,0,0,.9)}
+.sub{color:var(--ink2);margin:0 0 26px;font-size:15px}
+.card{background:#fff;border:3px solid var(--ink);border-radius:18px;padding:20px 22px;margin-bottom:18px;box-shadow:4px 4px 0 rgba(0,0,0,.9)}
+.card h2{font-family:"Arial Black",sans-serif;font-size:20px;margin:0 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{background:var(--accent);border:2px solid var(--ink);border-radius:9px;padding:1px 9px;font-size:12px;font-weight:800;transform:rotate(-1.5deg)}
+.card p{color:var(--ink2);margin:6px 0 14px;line-height:1.65;font-size:14.5px}
+.btn{display:inline-block;background:var(--accent);border:3px solid var(--ink);border-radius:13px;padding:9px 18px;font-weight:800;text-decoration:none;color:var(--ink);box-shadow:3px 3px 0 rgba(0,0,0,.9);font-size:15px}
+.btn:hover{background:var(--brand)}
+.ids{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.id{background:#F1F5F6;border:2px solid var(--ink);border-radius:9px;padding:3px 10px;font-size:12.5px;font-weight:700}
+footer{margin-top:26px;color:var(--ink2);font-size:13px;line-height:1.8}
+</style></head><body><div class="wrap">
+<h1>1024 Builder 作品集<span class="badge">1024 WEEK</span></h1>
+<p class="sub">TRAE 社区 1024 狂欢周 · 玩法二「作品秀」参赛作品 · 两件都是单文件 HTML，零依赖、零外部请求，双击也能开</p>
+<div class="card">
+<h2>1024 位运算 · Bit Lab <span class="tag">作品一</span></h2>
+<p>把 2048 的棋盘换成一个 <b>1024 位寄存器</b>：16 格 × 64 位，每格是一段真实存在的比特串，合并是真正的按位或运算（A OR B + 补位），点任意一格能把这 64 位读成 uint64 / IPv6 / HEX+ASCII / 纳秒时间戳四种身份。合成满了就是 <b>1024 个 1</b> 全部点亮，可导出「1024 位全 1 寄存器」成就卡。</p>
+<a class="btn" href="./bit-lab/index.html">▶ 打开《1024 位运算》</a>
+<div class="ids"><span class="id">单文件 HTML</span><span class="id">零依赖</span><span class="id">零外部请求</span><span class="id">可导出成就卡 PNG</span></div>
+</div>
+<div class="card">
+<h2>1024 楼层实况墙 · Floor Wall <span class="tag">作品二</span></h2>
+<p>把这次 1024 盖楼活动的主帖做成一块可交互的数据墙：真实楼层时间轴、128/256/512/1024 四个里程碑的归属与「无效回复顺延一楼」判定、<b>输入你的社区 ID 定位你的那一楼</b>、1024 楼达成时刻预测器，以及冲楼预测卡导出。数据全部来自活动主帖公开接口，一个数都没编。</p>
+<a class="btn" href="./floor-wall/index.html">▶ 打开《1024 楼层实况墙》</a>
+<div class="ids"><span class="id">单文件 HTML</span><span class="id">真实楼层数据</span><span class="id">内置快照可离线</span><span class="id">可导出预测卡 PNG</span></div>
+</div>
+<footer>
+全部代码零依赖、零外部请求 —— 没有 CDN、没有外链字体、没有统计脚本，双击 index.html 即可离线运行。<br>
+数据来源：TRAE 社区主帖 <a href="https://forum.trae.cn/t/topic/325833">forum.trae.cn/t/topic/325833</a>（公开接口，楼层数据截至 2026-10-21 00:44 采样）。
+</footer>
+</div></body></html>
