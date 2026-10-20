@@ -524,7 +524,7 @@ table.facts td b{font-variant-numeric:tabular-nums}
   <!-- ========================= 事实基线 ========================= -->
   <section class="card">
     <div class="card-head"><h2>事实基线与数据说明 <span class="badge-sticker ghost">Ground Truth</span></h2></div>
-    <p class="desc">页面内置一份采样快照（离线也能渲染时间轴）；<b>页面会自己探查最新楼层</b> —— 依次尝试「本站镜像 / 论坛直连 / 公共代理 / RSS」四类通道，命中即止，全程<b>不需要人工复制粘贴任何 JSON</b>。「本站镜像」由 GitHub Actions 定时抓取主帖全量楼层写成静态文件，Pages 对静态资源返回 <code>access-control-allow-origin: *</code>，所以页面可跨源直取（实测同源 <b>0.30s</b> / 跨源 <b>0.12s</b> 命中）。</p>
+    <p class="desc">页面内置一份采样快照（离线也能渲染时间轴）；<b>页面会自己探查最新楼层</b> —— 依次尝试「自有服务器（同源 / 跨源）/ 论坛直连 / 公共代理 / RSS / 静态镜像」多条通道，命中即止，全程<b>不需要人工复制粘贴任何 JSON</b>。主通道是我自己服务器上的一个常驻进程：它每 3 分钟分页抓取主帖全量楼层，整理成 JSON 后以带 <code>access-control-allow-origin: *</code> 头的接口对外提供，所以页面从自家域名打开时是同源（零跨域成本），搬到别处也照样能直取（实测同源 <b>0.20s</b> / 跨源 <b>0.12s</b> 命中）。</p>
     <table class="facts">
       <thead><tr><th>指标</th><th>采样值（2026-10-21 01:00 CST）</th><th>说明</th></tr></thead>
       <tbody>
@@ -1878,7 +1878,11 @@ function probeLogHTML(log) {
   }).join('');
   return '<details class="probe-log"><summary>探查日志 —— ' + log.length + ' 条通道逐条尝试，命中即止</summary>' +
     '<table><thead><tr><th></th><th>通道</th><th>耗时</th><th>结果</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-    '<p class="pl-note">「本站镜像」由 GitHub Actions 定时抓取主帖全量楼层后写入 Pages 静态文件；' +
+    '<p class="pl-note">主通道是「自有服务器」：我自己的服务器上跑着一个常驻进程，每 3 分钟分页抓取主帖全量楼层，' +
+     '整理成 JSON 后以带 <code>access-control-allow-origin: *</code> 头的接口对外提供；' +
+     '页面在自家域名下打开时走同源（零跨域成本），搬到别处也能跨源直取。' +
+     '另有 GitHub Actions 定时生成的静态镜像与公共代理 / RSS 通道作为兜底，' +
+     '逐条探查结果见上方日志，<b>全程无需人工复制粘贴</b>。</p></details>';
     'Pages 对静态资源返回 <code>access-control-allow-origin: *</code>，因此页面可跨源直取，**全程无需人工复制粘贴**。</p></details>';
 }
 
