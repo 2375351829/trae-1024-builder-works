@@ -253,20 +253,21 @@ input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
 }
 @keyframes brushSweep{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
 .mascot{
-  width:132px;height:132px;margin:6px auto 12px;
+  width:144px;height:144px;margin:6px auto 12px;   /* 48 × 3，整数倍放大 → 像素完美 */
   animation:mascotPop .7s cubic-bezier(.2,1.7,.4,1) .45s both;
   filter:drop-shadow(3px 3px 0 rgba(0,0,0,.30));
 }
-@keyframes mascotPop{0%{transform:scale(0) rotate(-28deg);opacity:0}70%{transform:scale(1.16) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(-2deg);opacity:1}}
-.mascot svg{width:100%;height:100%;display:block;border-radius:14px;}
+@keyframes mascotPop{0%{transform:scale(0) rotate(-28deg);opacity:0}70%{transform:scale(1.16) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+.mascot .trae-logo{width:100%;height:100%;display:block;image-rendering:pixelated;}
 .mascot-note{text-align:center;font-size:12px;font-weight:800;color:var(--ink-2);margin:-6px 0 10px;}
 .pet{
-  width:46px;height:46px;display:inline-block;vertical-align:-9px;margin-right:4px;
+  width:48px;height:48px;display:inline-block;vertical-align:-10px;margin-right:4px;  /* 1:1 原尺寸 */
   animation:petBob 2.6s ease-in-out infinite;
   filter:drop-shadow(2px 2px 0 rgba(0,0,0,.28));
 }
-.pet svg{width:100%;height:100%;display:block;border-radius:10px;}
-@keyframes petBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
+.pet .trae-logo{width:100%;height:100%;display:block;image-rendering:pixelated;}
+/* 只做上下浮动、不做旋转：原图是 48×48 像素图，任何角度都会破坏像素对齐 */
+@keyframes petBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .pl-sub{margin-left:10px;font-weight:800;color:var(--ink-2);}
 .pl-sub b{color:var(--deep);}
 .topup-btn{
@@ -1341,32 +1342,32 @@ function paintBitmap(){
    48×48 像素级还原：绿色机器人头 + 左下缺口 + 两颗菱形眼；主色 #32F08C。
    以内联 SVG 承载 —— 零外部请求、任意尺寸不糊、背景可透明适配。
    ========================================================================== */
-const TRAE_GREEN = '#32F08C';
-const TRAE_DARK  = '#0A0B0D';
-/** 机器人轮廓：顶栏 y13-17 / 左壁 x8-13 / 右壁 x35-40 / 底栏 y31-36（左下留缺口） */
-const TRAE_BODY_D = 'M8 13 H40 V36 H13 V31 H35 V17 H8 Z';
-/** 两颗菱形眼 */
-const TRAE_EYE_L_D = 'M20 21 L22.5 23.5 L20 26 L17.5 23.5 Z';
-const TRAE_EYE_R_D = 'M29.5 21 L32.25 23.5 L29.5 26 L26.75 23.5 Z';
+/* ==========================================================================
+   官方 TRAE 机器人吉祥物
+   —— 直接内嵌 TRAE 官网（https://www.trae.cn/）的站点图标 favicon.png 的**原始字节**
+      （48×48 PNG，488 B → base64 652 字符）：零外部请求，且**逐像素一致**。
+   —— 早期版本是手工反推 SVG 路径，把抗锯齿边缘像素误当成实体，整体偏了约 1px，
+      达不到「完全复刻」；改为直接内联原图后，1:1 显示与整数倍放大都完全一致。
+   ========================================================================== */
+const TRAE_ICON_B64 = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAF9SURBVHgB7Zm9SsNQFMf/EYWiVB2KKGLBScHFN9BJurmoa0dn9QGqD1CdHbtWFzd10jfQQdBJqIgKGYw4VCR+nGD0ptqmsSectD0/CKXpbXJ+3HvOyYfVP5B+RxvTgzZHBaRRAWlUQBoVkEYFpOkNGzC0MgtJnPJZw99DBcZ2FiFJmIDmgDSdn8S1PB9d4aFwiDgY2cwhnZuK9J/IAq5TxevNI+Lg7amKqGgO/DrgYIplTNPnAyN9E8OYPF5FZmOu7hgKPrufZ+svkXOgHhR8di/vfWbW5719dvE0MMYPPjUz6m3E3doBWoFlBszgfUjCnAkzeB+6TGl1JuJNYuOJk/W1ccMiQGW1slwKlFe7eAJ7+2cJuZ8lsrJUwsvF/fc+us5JxBIiTIna4H1MCY7gCbYkJij464Xdhg3Jl3D/0bT+gj0HmummXMET2omlCc2By/GtwHeq3dO3BSQFXULSdN8dGdV6p3yOpGDpOzJhVEAaFZBGBaRRAWlUQJoPEeV5RYlN/QYAAAAASUVORK5CYII=';
+const TRAE_ICON_SRC = 'data:image/png;base64,' + TRAE_ICON_B64;
+/** 预加载原图，供成就卡 Canvas 用「最近邻」方式整数倍放大绘制 */
+const TRAE_ICON_IMG = new Image();
+TRAE_ICON_IMG.src = TRAE_ICON_SRC;
 
-/** 官方 TRAE 机器人 SVG（页面内多处复用：顶栏宠物、胜利吉祥物） */
-function traeSvg(){
-  return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TRAE 机器人">' +
-    '<rect x="0" y="0" width="48" height="48" rx="7" fill="' + TRAE_DARK + '"/>' +
-    '<path d="' + TRAE_BODY_D + '" fill="' + TRAE_GREEN + '"/>' +
-    '<path d="' + TRAE_EYE_L_D + '" fill="' + TRAE_GREEN + '"/>' +
-    '<path d="' + TRAE_EYE_R_D + '" fill="' + TRAE_GREEN + '"/>' +
-  '</svg>';
+/** 页面内复用：顶栏宠物 / 胜利吉祥物 —— 同一张原图 */
+function traeLogo(){
+  return '<img class="trae-logo" src="' + TRAE_ICON_SRC + '" alt="TRAE 机器人" width="48" height="48">';
 }
 
 function buildMascot(){
-  mascotEl.innerHTML = traeSvg();
+  mascotEl.innerHTML = traeLogo();
 }
 
 /** 顶栏的小宠物：官方 TRAE 机器人，随页面轻微浮动 */
 function buildPet(){
   const p = $('pet');
-  if (p) p.innerHTML = traeSvg();
+  if (p) p.innerHTML = traeLogo();
 }
 
 /* —— bokeh 粒子 —— */
@@ -1462,28 +1463,19 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.closePath();
 }
 
-function drawMascotOnCanvas(ctx, x, y, px){
-  /* 官方 TRAE 机器人（与页面内 SVG 同一套几何）：48 单位坐标系 → 8 格 × px */
-  const s = (px * 8) / 48;
+function drawMascotOnCanvas(ctx, x, y, size){
+  /* 官方 TRAE 机器人原图（48×48 PNG）→ 最近邻整数倍放大，像素与官网完全一致 */
+  if (TRAE_ICON_IMG.complete && TRAE_ICON_IMG.naturalWidth){
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;      // 最近邻：像素锐利，不糊
+    ctx.drawImage(TRAE_ICON_IMG, x, y, size, size);
+    ctx.restore();
+    return;
+  }
+  /* 兜底：原图尚未解码完成时，先画一个占位方块，不让成就卡导出失败 */
   ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(s, s);
-  ctx.fillStyle = TRAE_DARK;
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(0, 0, 48, 48, 7); else ctx.rect(0, 0, 48, 48);
-  ctx.fill();
-  ctx.fillStyle = TRAE_GREEN;
-  ctx.beginPath();
-  ctx.moveTo(8, 13); ctx.lineTo(40, 13); ctx.lineTo(40, 36); ctx.lineTo(13, 36);
-  ctx.lineTo(13, 31); ctx.lineTo(35, 31); ctx.lineTo(35, 17); ctx.lineTo(8, 17);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(20, 21); ctx.lineTo(22.5, 23.5); ctx.lineTo(20, 26); ctx.lineTo(17.5, 23.5); ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(29.5, 21); ctx.lineTo(32.25, 23.5); ctx.lineTo(29.5, 26); ctx.lineTo(26.75, 23.5); ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle = '#0A0B0D';
+  ctx.fillRect(x, y, size, size);
   ctx.restore();
 }
 
@@ -1563,8 +1555,8 @@ function buildCardCanvas(){
   ctx.strokeRect(ox - 6, oy - 6, gridSize + 12, gridSize + 12);
   ctx.restore();
 
-  // 吉祥物
-  drawMascotOnCanvas(ctx, 92, oy + gridSize - 108, 14);
+  // 吉祥物（官方 TRAE 机器人原图，48×48 → 3 倍 = 144，整数倍不糊）
+  drawMascotOnCanvas(ctx, 92, oy + gridSize - 152, 144);
 
   // 统计数据
   const nick = (nickInput.value || '匿名工程师').slice(0, 16);

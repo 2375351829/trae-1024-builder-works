@@ -19,14 +19,14 @@ h1{font-family:"Arial Black","Segoe UI Black",sans-serif;font-weight:900;font-si
 .ids{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .id{background:#F1F5F6;border:2px solid var(--ink);border-radius:9px;padding:3px 10px;font-size:12.5px;font-weight:700}
 footer{margin-top:26px;color:var(--ink2);font-size:13px;line-height:1.8}
-.pet{width:44px;height:44px;display:inline-block;vertical-align:-9px;margin-right:6px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.3))}
-.pet svg{width:100%;height:100%;display:block;border-radius:10px}
+.pet{width:48px;height:48px;display:inline-block;flex:0 0 auto}
+.pet img{width:100%;height:100%;display:block;image-rendering:pixelated}
 </style></head><body><div class="wrap">
-<h1><svg class="pet" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="TRAE 机器人"><rect x="0" y="0" width="48" height="48" rx="7" fill="#0A0B0D"/><path d="M8 13 H40 V36 H13 V31 H35 V17 H8 Z" fill="#32F08C"/><path d="M20 21 L22.5 23.5 L20 26 L17.5 23.5 Z" fill="#32F08C"/><path d="M29.5 21 L32.25 23.5 L29.5 26 L26.75 23.5 Z" fill="#32F08C"/></svg>1024 Builder 作品集<span class="badge">1024 WEEK</span></h1>
+<h1><span class="pet"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAF9SURBVHgB7Zm9SsNQFMf/EYWiVB2KKGLBScHFN9BJurmoa0dn9QGqD1CdHbtWFzd10jfQQdBJqIgKGYw4VCR+nGD0ptqmsSectD0/CKXpbXJ+3HvOyYfVP5B+RxvTgzZHBaRRAWlUQBoVkEYFpOkNGzC0MgtJnPJZw99DBcZ2FiFJmIDmgDSdn8S1PB9d4aFwiDgY2cwhnZuK9J/IAq5TxevNI+Lg7amKqGgO/DrgYIplTNPnAyN9E8OYPF5FZmOu7hgKPrufZ+svkXOgHhR8di/vfWbW5719dvE0MMYPPjUz6m3E3doBWoFlBszgfUjCnAkzeB+6TGl1JuJNYuOJk/W1ccMiQGW1slwKlFe7eAJ7+2cJuZ8lsrJUwsvF/fc+us5JxBIiTIna4H1MCY7gCbYkJij464Xdhg3Jl3D/0bT+gj0HmummXMET2omlCc2By/GtwHeq3dO3BSQFXULSdN8dGdV6p3yOpGDpOzJhVEAaFZBGBaRRAWlUQJoPEeV5RYlN/QYAAAAASUVORK5CYII=" alt="TRAE 机器人" width="48" height="48"></span>1024 Builder 作品集<span class="badge">1024 WEEK</span></h1>
 <p class="sub">TRAE 社区 1024 狂欢周 · 玩法二「作品秀」参赛作品 · 两件都是单文件 HTML，零依赖、零外部请求，双击也能开</p>
 <div class="card">
 <h2>1024 位运算 · Bit Lab <span class="tag">作品一</span></h2>
-<p>把 2048 的棋盘换成一个 <b>1024 位寄存器</b>：16 格 × 64 位，每格是一段真实存在的比特串，合并是真正的按位或运算（A OR B + 补位），点任意一格能把这 64 位读成 uint64 / IPv6 / HEX+ASCII / 纳秒时间戳四种身份。合成满了就是 <b>1024 个 1</b> 全部点亮，可导出「1024 位全 1 寄存器」成就卡。</p>
+<p>把 2048 的棋盘换成一个 <b>1024 位寄存器</b>：16 格 × 64 位，每格是一段真实存在的比特串，合并是真正的按位或运算（A OR B + 补位），点任意一格能把这 64 位读成 uint64 / IPv6 / HEX+ASCII / 纳秒时间戳四种身份。合成满了就是 <b>1024 个 1</b> 全部点亮，可导出「1024 位全 1 寄存器」成就卡。<br>满格之后位已用尽、无法再叠加，所以另配了<b>有限次数的「补位」</b>（每局 4 次）—— 用来在走投无路时收尾，而不是刷分。</p>
 <a class="btn" href="./bit-lab/index.html">▶ 打开《1024 位运算》</a>
 <div class="ids"><span class="id">单文件 HTML</span><span class="id">零依赖</span><span class="id">零外部请求</span><span class="id">可导出成就卡 PNG</span></div>
 </div>
@@ -38,6 +38,7 @@ footer{margin-top:26px;color:var(--ink2);font-size:13px;line-height:1.8}
 </div>
 <footer>
 全部代码零依赖、零外部请求 —— 没有 CDN、没有外链字体、没有统计脚本，双击 index.html 即可离线运行。<br>
+页面上的 TRAE 机器人图标是 <b>trae.cn 官网站点图标原图</b>（48×48 PNG）内嵌基线编码，逐像素一致。<br>
 数据来源：TRAE 社区主帖 <a href="https://forum.trae.cn/t/topic/325833">forum.trae.cn/t/topic/325833</a>（公开接口，楼层数据截至 2026-10-21 00:44 采样）。
 </footer>
 </div></body></html>
