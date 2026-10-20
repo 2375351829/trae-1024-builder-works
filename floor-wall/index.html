@@ -113,6 +113,21 @@ input,select,textarea{font-family:inherit;font-weight:600;font-size:14px;color:v
 .banner.info .b-text code{background:#EDF3F5;color:var(--ink);border:1px solid rgba(0,0,0,.14)}
 .banner.info .b-act .btn{border-color:var(--ink);box-shadow:2.5px 2.5px 0 var(--ink)}
 .banner.info .b-act .btn:hover{background:var(--accent2)}
+/* ---------- 探查日志 ---------- */
+.probe-log{margin-top:10px;border:1px solid rgba(0,0,0,.16);border-radius:10px;padding:7px 10px;background:rgba(255,255,255,.72)}
+.banner.ok .probe-log{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28)}
+.probe-log summary{cursor:pointer;font-weight:800;font-size:12.5px;color:var(--ink)}
+.banner.ok .probe-log summary{color:#fff}
+.probe-log table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.probe-log th{text-align:left;font-weight:800;color:var(--muted);padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.14);font-size:11px}
+.banner.ok .probe-log th{color:#D8ECDF;border-bottom-color:rgba(255,255,255,.22)}
+.probe-log td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.07);vertical-align:top}
+.banner.ok .probe-log td{border-bottom-color:rgba(255,255,255,.12);color:#EAF4EC}
+.probe-log .pl-ico{width:22px;text-align:center}
+.probe-log .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;white-space:nowrap}
+.pl-note{margin:8px 0 0;font-size:11.5px;line-height:1.6;color:var(--muted)}
+.banner.ok .pl-note{color:#CFE6D8}
+.banner.ok .probe-log code{background:rgba(255,255,255,.14);padding:1px 4px;border-radius:4px}
 
 /* ---------- KPI 条 ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:18px 0}
@@ -334,7 +349,7 @@ table.facts td b{font-variant-numeric:tabular-nums}
       <div class="brand-sub">数据源：TRAE 社区主帖 <b>forum.trae.cn/t/topic/325833</b> ｜ 楼层时间轴 · 里程碑轨 · 我的楼层 · 1024 预测</div>
     </div>
     <div class="topbar-actions">
-      <button class="btn accent" id="btnOpenSync" title="3 步同步 forum.trae.cn 的最新楼层">⟳ 同步最新楼层</button>
+      <button class="btn accent" id="btnOpenSync" title="页面自主探查最新楼层：依次尝试镜像 / 直连 / 代理 / RSS 通道">⟳ 立即探查</button>
       <button class="btn" id="btnRefresh" title="尝试直接拉取一次主帖 JSON（可能被浏览器跨域策略拦截）">↻ 立即刷新</button>
     </div>
   </div>
@@ -476,8 +491,13 @@ table.facts td b{font-variant-numeric:tabular-nums}
         <div class="ai-b">公开只读接口 <code>forum.trae.cn/t/topic/325833.json</code>，以及分页变体 <code>/t/325833.json?page=N</code>（每页 20 层）。字段：<code>highest_post_number</code> / <code>last_posted_at</code> / <code>posts_count</code> / <code>participant_count</code> / <code>post_stream.posts[].cooked</code>。</div>
       </div>
       <div class="about-item">
-        <div class="ai-t">② 为什么必须手动同步</div>
-        <div class="ai-b">浏览器同源策略要求跨域响应带 <code>Access-Control-Allow-Origin</code> 头。<b>实测该接口不返回这个头</b>（带 <code>Origin</code> 请求头复查过），所以网页里的 <code>fetch()</code> 必然被拦，抛 <code>TypeError: Failed to fetch</code>。这不是作品坏了，是浏览器的安全策略 —— 所以本页改用「打开链接 → 复制 → 粘贴解析」三步法拿数据。</div>
+        <div class="ai-t">② 页面怎么自己拿到数据（自主探查）</div>
+        <div class="ai-b">浏览器同源策略要求跨域响应带 <code>Access-Control-Allow-Origin</code> 头。<b>实测论坛接口不返回这个头</b>（带 <code>Origin</code> 请求头复查过），网页里的 <code>fetch()</code> 必然被拦，抛 <code>TypeError: Failed to fetch</code>。<br>
+        所以本页<b>不靠人工复制粘贴</b>，而是<b>自己找路</b> —— 依次探查多条通道，命中即止：<br>
+        · <b>本站镜像</b>：GitHub Actions 定时把主帖全量楼层抓下来写成静态文件，Pages 对静态资源返回 <code>access-control-allow-origin: *</code>，页面可跨源直取；<br>
+        · <b>论坛直连</b>：官方若哪天开启 CORS 即刻生效；<br>
+        · <b>公共 CORS 代理</b> ×2 与 <b>RSS 通道</b>：与前两条完全独立的第三方路径。<br>
+        每次探查的逐条结果都摊在「<b>探查日志</b>」里，读者可以自己核对 —— 探查了几条、哪条命中、耗时多少、失败原因是什么。</div>
       </div>
       <div class="about-item">
         <div class="ai-t">③ 有效回复怎么判（两套口径都算给你看）</div>
@@ -489,7 +509,7 @@ table.facts td b{font-variant-numeric:tabular-nums}
       </div>
     </div>
     <div class="field" style="margin:14px 0 0">
-      <button class="btn accent" id="btnOpenSync2">⟳ 同步最新楼层</button>
+      <button class="btn accent" id="btnOpenSync2">⟳ 立即探查</button>
       <button class="btn" id="btnResetSnapshot">清除本地缓存快照</button>
       <button class="btn" id="btnReload">↻ 重新加载页面</button>
     </div>
@@ -531,10 +551,10 @@ table.facts td b{font-variant-numeric:tabular-nums}
 <div class="modal" id="syncModal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
     <div class="modal-head">
-      <h2 id="syncTitle">同步最新楼层 <span class="badge-sticker">Sync</span></h2>
+      <h2 id="syncTitle">手动导入 JSON（备用通道） <span class="badge-sticker">Manual</span></h2>
       <button class="btn sm" id="btnCloseSync">✕ 关闭</button>
     </div>
-    <p class="desc">浏览器同源策略不让网页脚本直连 forum.trae.cn（该接口不返回 <code>Access-Control-Allow-Origin</code> 头），所以这一步必须你亲手做 —— 只要 3 步、10 秒，粘贴后所有视图（时间轴 / 里程碑 / 我的楼层 / 预测器）会立刻用上最新楼层。</p>
+    <p class="desc"><b>正常情况下你用不到这里</b> —— 页面会自己探查（镜像 / 直连 / 代理 / RSS 四类通道），全程不需要你复制粘贴任何东西。这个面板是给「所有自动通道都没命中」时准备的兜底：把论坛 JSON 亲手贴进来，所有视图（时间轴 / 里程碑 / 我的楼层 / 预测器）会立刻用上最新楼层。</p>
     <div class="steps">
       <div class="step">点「<b>打开 JSON 链接</b>」→ 浏览器会直接显示主帖的 JSON 文本（<code>forum.trae.cn/t/topic/325833.json</code>）。</div>
       <div class="step">在那个页面按 <code>Ctrl+A</code> 全选 → <code>Ctrl+C</code> 复制。</div>
@@ -567,13 +587,29 @@ var EP_TOPIC   = 'https://forum.trae.cn/t/topic/' + TOPIC_ID + '.json';
 var EP_PAGE    = function (n) { return 'https://forum.trae.cn/t/' + TOPIC_ID + '.json?page=' + n; };
 var EP_OVERRIDE = null;                        // 仅供自测：临时改写数据源（验证降级路径）
 function topicUrl() { return EP_OVERRIDE || EP_TOPIC; }
-/* 本地文件方式打开时，浏览器必定拦截对 forum.trae.cn 的跨域请求（实测无 ACAO 头），
-   自动抓取只会产生无意义的控制台告警，故 file:// 下默认跳过自动抓取，改走「手动导入」。 */
+/* 浏览器同源策略：forum.trae.cn 不返回 ACAO 头 → 直连必被拦。
+   但本页有「自主探查」多通道（镜像 / 直连 / 代理 / RSS），file:// 下同样尝试，
+   只是相对路径的同源镜像不可用（file:// 读不了相对文件），会自动退到跨源镜像。 */
 var IS_FILE = (location.protocol === 'file:');
 var LS_KEY     = 'floorwall.snapshot.v1';
 var TARGET_MAX = 1024;
 var MILESTONES = [128, 256, 512, 1024];
-var REFRESH_MS = 60000;          // 自动刷新周期：60s
+var REFRESH_MS = 180000;         // 自动探查周期：3 分钟（镜像每 15 分钟更新一次，60s 太频繁）
+/* ==========================================================================
+   自主探查通道（Autonomous Probing）
+   --------------------------------------------------------------------------
+   浏览器同源策略禁止页面脚本直连 forum.trae.cn（该站不返回 ACAO 头，实测确认），
+   所以页面**自己找路** —— 依次尝试多条取数通道，命中即止：
+     ① 本站镜像（GitHub Actions 定时把主帖全量楼层抓下来写到 Pages 的 data/floors.json；
+        Pages 对静态资源返回 access-control-allow-origin: * → 可跨源直取，**无需任何人工介入**）
+     ② 论坛直连（官方若哪天开启 CORS 即立刻生效）
+     ③ 公共 CORS 代理 ×2（第三方，与①②完全独立）
+     ④ RSS 通道（只要最新 25 层，载荷小，用于镜像滞后时补鲜）
+   全部失败时保留内置快照 + localStorage 快照，**绝不白屏**。
+   ========================================================================== */
+var MIRROR_ABS = 'https://2375351829.github.io/trae-1024-builder-works/data/floors.json';
+var MIRROR_REL = '../data/floors.json';
+var PROBE_TIMEOUT = 9000;        // 单条通道超时（ms）
 var PAGE_SIZE  = 20;             // 论坛每页 20 层
 var SAMPLE_PAGES = 12;           // 均匀采样页数（B3 性能策略）
 /* 有效性判定 —— 两套口径，本作品两套都算、都展示。
@@ -597,17 +633,21 @@ var BASELINE = {"t":1792387683834,"l":1792514691750,"h":364,"p":233,"posts":[[1,
 var ST = {
   posts: new Map(),        // 楼号 -> {n, ms, valid, near, user, excerpt}
   meta: { highest: 0, participants: 0, lastPostedAt: 0, topicCreatedAt: 0, postsCount: 0 },
-  source: 'baseline',      // baseline | live | manual
+  source: 'baseline',      // baseline | mirror | topic | manual
   sourceLabel: '',
   error: null,
   lastAttempt: 0,
+  probeLog: [],             // 最近一次自主探查的逐条通道结果
+  probeAt: 0,               // 最近一次探查成功的时刻
+  mirrorAt: 0,              // 镜像的采样时刻（GitHub Actions 写入的时间）
+  mirrorAdded: 0,           // 最近一次从镜像新增的楼层数
   myName: '',
   mySet: new Set(),
   selected: null,
   focusFloor: null,
   fit: 'reached',          // reached | all
   autoTimer: null,
-  autoPaused: false,       // 熔断标志：跨域受限后暂停 60s 自动轮询
+  autoPaused: false,       // 熔断标志：全部通道未命中后暂停自动轮询
   inFlight: false,
   pts: []                  // 时间轴命中测试用的点位缓存
 };
@@ -919,13 +959,12 @@ function renderKPI() {
     $('kpiLast').textContent = '—'; $('kpiLastSub').textContent = '—';
   }
 
-  var srcLabel = ST.sourceLabel || (ST.source === 'live' ? '实时接口' : ST.source === 'manual' ? '手动导入' : '内置快照');
+  var srcLabel = ST.sourceLabel || (ST.source === 'manual' ? '手动导入' : '内置快照');
   $('kpiSrc').textContent = srcLabel;
-  $('kpiSrcSub').textContent = ST.source === 'live'
-    ? '实时 · 每 60s 自动刷新'
-    : (ST.autoPaused ? '已同步快照 · 自动拉取受跨域限制'
-      : (IS_FILE ? ('采样于 ' + fmtDT(BASELINE ? BASELINE.l : Date.now()) + ' · 可一键同步')
-        : (ST.lastAttempt ? '最后尝试 ' + fmtTime(ST.lastAttempt) : '内置真实快照')));
+  $('kpiSrcSub').textContent = ST.probeAt
+    ? ('已自主探查 · 每 ' + Math.round(REFRESH_MS / 60000) + ' 分钟自动重探')
+    : (ST.autoPaused ? '探查未命中 · 显示内置快照'
+      : (ST.lastAttempt ? '正在自主探查…' : '内置真实快照'));
 }
 
 /* ==========================================================================
@@ -1635,50 +1674,218 @@ function corsHintHTML(err) {
   }
   return detail +
     'forum.trae.cn 的 JSON 接口未返回 <code>Access-Control-Allow-Origin</code> 响应头，' +
-    '页面脚本无法直接读取（2026-10-21 实测确认）。' +
-    '<b>页面不会白屏</b>——当前展示的是最近一次成功快照（已存入 localStorage）。' +
-    '为避免每 60s 重复触发浏览器的 CORS 告警，<b>自动刷新已熔断暂停</b>，可随时点「重试抓取」恢复。' +
-    '要拿最新数据，请点「同步最新楼层」按三步法：打开 JSON 链接 → 复制全文 → 粘贴进文本框解析。';
+    '页面脚本无法<b>直接</b>读取（2026-10-21 实测确认）。' +
+    '所以本页不靠人工复制粘贴，而是由页面<b>自己找路</b>：依次探查「本站镜像 / 论坛直连 / 公共代理 / RSS」四类通道，命中即止。' +
+    '<b>页面不会白屏</b>——当前展示的是内置真实快照与最近一次成功探查的结果（已存入 localStorage）。' +
+    '若全部通道都失败，还可以在「手动导入 JSON」面板里直接粘贴论坛 JSON。';
 }
 
 /* ==========================================================================
    14. 数据抓取 + 自动刷新
    ========================================================================== */
+/* ==========================================================================
+   14. 自主探查：多通道依次尝试，命中即止
+   ========================================================================== */
+function rssUrl() { return 'https://forum.trae.cn/t/topic/' + TOPIC_ID + '.rss'; }
+
+/** 本次探查要试的通道（按优先级排列） */
+function probeChannels() {
+  var list = [];
+  if (!IS_FILE) list.push({ id: 'mirror-rel', label: '本站镜像（同源）', kind: 'mirror', url: MIRROR_REL });
+  list.push({ id: 'mirror-abs', label: '本站镜像（跨源）', kind: 'mirror', url: MIRROR_ABS });
+  list.push({ id: 'direct', label: '论坛直连', kind: 'topic', url: topicUrl() });
+  list.push({ id: 'proxy-a', label: '公共代理 A', kind: 'topic', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(topicUrl()) });
+  list.push({ id: 'proxy-b', label: '公共代理 B', kind: 'topic', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(topicUrl()) });
+  list.push({ id: 'rss', label: 'RSS 通道', kind: 'rss', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl()) });
+  return list;
+}
+
+/** 取文本（镜像 / RSS 用） */
+function fetchText(url, timeoutMs) {
+  var ctl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctl) ctl.abort(); }, timeoutMs || PROBE_TIMEOUT);
+  var opt = { method: 'GET', credentials: 'omit', mode: 'cors', cache: 'no-store' };
+  if (ctl) opt.signal = ctl.signal;
+  return fetch(url, opt).then(function (res) {
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }, function (err) { clearTimeout(timer); throw err; });
+}
+
+/** 载入镜像：rows = [楼号, 时间戳ms, 用户名, 纯文本前 400 字]
+    有效性**一律由本页面现场判定** —— 宽松/严格两套口径保持单一事实来源，
+    不会因为镜像与页面各判各的而让 213/201/12 打架。 */
+function applyMirror(mirror) {
+  if (!mirror || !mirror.rows || !mirror.rows.length) return 0;
+  var added = 0;
+  for (var i = 0; i < mirror.rows.length; i++) {
+    var r = mirror.rows[i];
+    var n = r[0];
+    if (typeof n !== 'number') continue;
+    var text = String(r[3] || '');
+    var rec = {
+      n: n, ms: r[1] || 0,
+      valid: n !== 1 && VALID_RE.test(text),
+      strict: n !== 1 && text.indexOf(VALID_MARK_STRICT) >= 0,
+      user: String(r[2] || '匿名'),
+      excerpt: text.slice(0, 160)
+    };
+    var old = ST.posts.get(n);
+    if (old) {
+      if (rec.ms > old.ms) { old.ms = rec.ms; old.user = rec.user; old.excerpt = rec.excerpt; }
+    } else {
+      ST.posts.set(n, rec);
+      added++;
+    }
+  }
+  if (typeof mirror.highest === 'number' && mirror.highest > ST.meta.highest) ST.meta.highest = mirror.highest;
+  if (typeof mirror.participants === 'number' && mirror.participants > ST.meta.participants) ST.meta.participants = mirror.participants;
+  if (typeof mirror.topicCreatedAt === 'number' && mirror.topicCreatedAt) ST.meta.topicCreatedAt = mirror.topicCreatedAt;
+  if (typeof mirror.lastPostedAt === 'number' && mirror.lastPostedAt > ST.meta.lastPostedAt) ST.meta.lastPostedAt = mirror.lastPostedAt;
+  ST.meta.postsCount = ST.posts.size;
+  ST.mirrorAt = mirror.fetchedAt || 0;
+  ST.mirrorAdded = added;
+  return mirror.rows.length;
+}
+
+/** 解析 Discourse RSS → 楼层记录（只取最新若干层，用于镜像滞后时补鲜） */
+function applyRSS(text) {
+  var items = String(text || '').match(/<item>[\s\S]*?<\/item>/g);
+  if (!items || !items.length) return 0;
+  var added = 0;
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var linkM = it.match(/<link>([^<]+)<\/link>/);
+    if (!linkM) continue;
+    var nM = linkM[1].match(/\/(\d+)\s*$/);
+    if (!nM) continue;
+    var n = parseInt(nM[1], 10);
+    if (!isFinite(n)) continue;
+    var whoM = it.match(/<dc:creator>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/dc:creator>/);
+    var user = whoM ? stripHTML(whoM[1]).trim() : '匿名';
+    var dM = it.match(/<description>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/description>/);
+    var body = dM ? stripHTML(dM[1]).replace(/阅读完整话题/g, '').trim() : '';
+    var tM = it.match(/<pubDate>([^<]+)<\/pubDate>/);
+    var ms = tM ? Date.parse(tM[1]) : 0;
+    if (!isFinite(ms)) ms = 0;
+    if (ST.posts.has(n)) continue;
+    ST.posts.set(n, {
+      n: n, ms: ms,
+      valid: n !== 1 && VALID_RE.test(body),
+      strict: n !== 1 && body.indexOf(VALID_MARK_STRICT) >= 0,
+      user: user, excerpt: body.slice(0, 160)
+    });
+    added++;
+  }
+  if (added) ST.meta.postsCount = ST.posts.size;
+  return items.length;
+}
+
+/** 单条通道探查：成功返回该通道取到的条目数，失败则 reject */
+function probeOne(ch) {
+  if (ch.kind === 'mirror') {
+    return fetchText(ch.url, PROBE_TIMEOUT).then(function (txt) {
+      return applyMirror(JSON.parse(txt));
+    });
+  }
+  if (ch.kind === 'rss') {
+    return fetchText(ch.url, PROBE_TIMEOUT).then(function (txt) {
+      var n = applyRSS(txt);
+      if (!n) throw new Error('RSS 无可解析楼层');
+      return n;
+    });
+  }
+  return fetchJSON(ch.url, PROBE_TIMEOUT).then(function (data) {
+    applyTopicMeta(data);
+    var ps = extractPosts(data);
+    mergePosts(ps);
+    return ps.length;
+  });
+}
+
+function shortErr(err) {
+  var m = (err && err.message) ? String(err.message) : String(err || '');
+  if (/Failed to fetch|NetworkError|Load failed|ERR_FAILED/i.test(m)) return '浏览器拦截 / 网络不可达';
+  if (/HTTP \d+/.test(m)) return m;
+  if (/JSON/i.test(m)) return '返回内容不是合法 JSON';
+  return m.slice(0, 36) || '未知错误';
+}
+
+/** 依次探查，命中即止 */
+function probeChain(channels, i, log) {
+  if (i >= channels.length) return Promise.resolve(null);
+  var ch = channels[i];
+  var t0 = Date.now();
+  return probeOne(ch).then(function (count) {
+    if (count > 0) {
+      log.push({ label: ch.label, ok: true, ms: Date.now() - t0, n: count, err: '' });
+      return { channel: ch, count: count };
+    }
+    log.push({ label: ch.label, ok: false, ms: Date.now() - t0, n: 0, err: '无可用数据' });
+    return probeChain(channels, i + 1, log);
+  }, function (err) {
+    log.push({ label: ch.label, ok: false, ms: Date.now() - t0, n: 0, err: shortErr(err) });
+    return probeChain(channels, i + 1, log);
+  });
+}
+
+/** 探查日志（折叠展示：把「找路」过程摊开给读者看） */
+function probeLogHTML(log) {
+  if (!log || !log.length) return '';
+  var rows = log.map(function (r) {
+    return '<tr><td class="pl-ico">' + (r.ok ? '✅' : '✕') + '</td><td>' + esc(r.label) + '</td>' +
+      '<td class="mono">' + r.ms + ' ms</td><td>' + (r.ok ? (r.n + ' 层') : esc(r.err)) + '</td></tr>';
+  }).join('');
+  return '<details class="probe-log"><summary>探查日志 —— ' + log.length + ' 条通道逐条尝试，命中即止</summary>' +
+    '<table><thead><tr><th></th><th>通道</th><th>耗时</th><th>结果</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p class="pl-note">「本站镜像」由 GitHub Actions 定时抓取主帖全量楼层后写入 Pages 静态文件；' +
+    'Pages 对静态资源返回 <code>access-control-allow-origin: *</code>，因此页面可跨源直取，**全程无需人工复制粘贴**。</p></details>';
+}
+
 function refresh(manual) {
   if (ST.inFlight) return Promise.resolve();
-  if (!manual && IS_FILE) {
-    // 本地文件方式打开：跨域必被拦截，自动抓取无意义 → 走「手动导入」通道
-    showFileModeBanner();
-    return Promise.resolve();
-  }
   ST.inFlight = true;
   ST.lastAttempt = Date.now();
   if (manual) ST.autoPaused = false;   // 手动重试 = 恢复自动轮询
   $('btnRefresh').disabled = true;
-  return fetchJSON(topicUrl(), 18000).then(function (data) {
-    applyTopicMeta(data);
-    var ps = extractPosts(data);
-    mergePosts(ps);
-    ST.source = 'live';
-    ST.sourceLabel = '实时接口';
-    ST.error = null;
-    ST.autoPaused = false;
-    saveSnapshot();
-    renderAll();
-    loadSampledPages();
-    showBanner('ok', '已从 <code>' + topicUrl() + '</code> 取得实时数据：最高 ' + ST.meta.highest +
-      ' 楼 · 参与者 ' + ST.meta.participants + ' · 最后回复 ' + fmtDT(ST.meta.lastPostedAt) + '。',
-      [{ label: '↻ 再刷新一次', onClick: function () { refresh(true); } },
-       { label: '⬇ 手动导入更多分页', accent: true, onClick: function () { scrollToImport(); } }]);
-  }, function (err) {
-    // 抓取失败：保留最近一次成功快照 + 醒目提示，页面绝不白屏
-    ST.error = err;
-    ST.autoPaused = true;          // 熔断：避免每 60s 重复触发浏览器 CORS 告警
-    try { renderAll(); } catch (e) { /* noop */ }
-    showBanner('err', corsHintHTML(err), [
-      { label: '⟳ 重试抓取', accent: true, onClick: function () { refresh(true); } },
-      { label: '⬇ 手动导入 JSON', onClick: function () { scrollToImport(); } }
-    ]);
+  var channels = probeChannels();
+  var log = [];
+  var t0 = Date.now();
+  return probeChain(channels, 0, log).then(function (hit) {
+    var ms = Date.now() - t0;
+    ST.probeLog = log;
+    if (hit) {
+      ST.source = hit.channel.id;
+      ST.sourceLabel = hit.channel.label;
+      ST.error = null;
+      ST.autoPaused = false;
+      ST.probeAt = Date.now();
+      saveSnapshot();
+      renderAll();
+      var mirrorNote = ST.mirrorAt
+        ? '　·　镜像采样于 <b>' + fmtDT(ST.mirrorAt) + '</b>' + (ST.mirrorAdded ? '（本次新增 ' + ST.mirrorAdded + ' 层）' : '')
+        : '';
+      showBanner('ok',
+        '<b>已自主探查完成</b>：命中通道 <b>' + esc(hit.channel.label) + '</b>，取回 <b>' + hit.count + '</b> 条楼层，耗时 <b>' +
+        (ms / 1000).toFixed(2) + 's</b>。当前最高 <b>' + ST.meta.highest + '</b> 楼 · 参与者 <b>' + ST.meta.participants +
+        '</b> · 最后回复 <b>' + fmtDT(ST.meta.lastPostedAt) + '</b>。' + mirrorNote + '<br>' +
+        '页面会每 ' + Math.round(REFRESH_MS / 60000) + ' 分钟自动再探查一次，<b>全程不需要人工复制粘贴任何 JSON</b>。' +
+        probeLogHTML(log),
+        [{ label: '⟳ 再探查一次', onClick: function () { refresh(true); } },
+         { label: '📖 数据从哪来', onClick: function () { openAbout(); } }]);
+    } else {
+      // 全部通道未命中：保留内置快照 + localStorage 快照，页面绝不白屏
+      ST.error = '全部 ' + log.length + ' 条通道未命中';
+      ST.autoPaused = true;          // 熔断：避免每轮重复触发浏览器网络告警
+      try { renderAll(); } catch (e) { /* noop */ }
+      showBanner('err',
+        '<b>自主探查未命中</b>：' + log.length + ' 条通道全部失败（详见下方日志）。<b>页面不会白屏</b> —— ' +
+        '当前展示的是内置真实快照（' + ST.meta.highest + ' 楼 / ' + ST.posts.size + ' 层），' +
+        'localStorage 里也存着最近一次成功探查的结果。<br>你也可以点「手动导入 JSON」直接粘贴论坛 JSON。' + probeLogHTML(log),
+        [{ label: '⟳ 重试探查', accent: true, onClick: function () { refresh(true); } },
+         { label: '⬇ 手动导入 JSON', onClick: function () { scrollToImport(); } }]);
+    }
   }).then(function () {
     ST.inFlight = false;
     $('btnRefresh').disabled = false;
@@ -1697,14 +1904,15 @@ function startAutoRefresh() {
   }, REFRESH_MS);
 }
 
-/** 默认状态说明条：跨域受限是浏览器同源策略的平台特性，不是故障，故用中性配色 */
+/** 探查进行中 / 尚未探查时的中性状态条（不是故障，故用中性配色） */
 function showFileModeBanner() {
   var snapTime = BASELINE ? fmtDT(BASELINE.l) : '—';
   showBanner('info',
     '<b>数据源</b>：内置真实快照（' + snapTime + ' 采样，' + ST.meta.highest + ' 楼 / ' + ST.posts.size +
-    ' 个真实楼层）· 浏览器同源策略限制，页面无法自动拉取最新楼层 —— 点「<b>同步最新楼层</b>」一键更新（3 步）。',
-    [{ label: '⟳ 同步最新楼层', accent: true, onClick: function () { openSyncModal(); } },
-     { label: '📖 为什么必须手动？', onClick: function () { openAbout(); } }]);
+    ' 个真实楼层）· 正在<b>自主探查</b>最新楼层（依次尝试镜像 / 直连 / 代理 / RSS 通道，命中即止）—— ' +
+    '<b>全程无需人工复制粘贴任何 JSON</b>。',
+    [{ label: '⟳ 立即探查', accent: true, onClick: function () { refresh(true); } },
+     { label: '📖 数据从哪来', onClick: function () { openAbout(); } }]);
 }
 
 /* ==========================================================================
@@ -1858,8 +2066,8 @@ function bindEvents() {
   }, { passive: true });
 
   $('btnRefresh').addEventListener('click', function () { refresh(true); });
-  $('btnOpenSync').addEventListener('click', openSyncModal);
-  $('btnOpenSync2').addEventListener('click', openSyncModal);
+  $('btnOpenSync').addEventListener('click', function () { refresh(true); });
+  $('btnOpenSync2').addEventListener('click', function () { refresh(true); });
   $('btnCloseSync').addEventListener('click', closeSyncModal);
   $('btnReload').addEventListener('click', function () { location.reload(); });
   $('btnTryDirect').addEventListener('click', function () { closeSyncModal(); refresh(true); });
@@ -2018,7 +2226,8 @@ function boot() {
     if (restored) {
       setMsg('importMsg', '↺ 已从 localStorage 恢复上次导入的快照（' + ST.posts.size + ' 层）。', 'ok');
     }
-    // 首屏只发 1 次请求
+    // 首屏只探查 1 次（内部按通道顺序依次尝试，命中即止）
+    showFileModeBanner();
     refresh(false);
     startAutoRefresh();
     exposeDebugAPI();
