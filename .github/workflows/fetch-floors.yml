@@ -1,0 +1,47 @@
+name: 抓取楼层-fetch-floors
+
+# 作用：定时把 TRAE 社区 1024 盖楼主帖的全部楼层抓下来，写成 data/floors.json。
+# 页面《1024 楼层实况墙》会**自主探查**这份镜像（Pages 对静态资源返回
+# access-control-allow-origin: *），于是观众打开页面就能自己拿到最新楼层，
+# 不需要任何人手动复制粘贴 JSON。
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/fetch-floors.mjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-floors
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 抓取楼层并生成镜像
+        run: node tools/fetch-floors.mjs --out data/floors.json
+
+      - name: 提交镜像
+        run: |
+          if git diff --quiet -- data/floors.json; then
+            echo "楼层无变化，跳过提交"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/floors.json
+          git commit -m 'chore(data): 更新楼层镜像'
+          git push
