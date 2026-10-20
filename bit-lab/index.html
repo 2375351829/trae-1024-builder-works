@@ -253,15 +253,32 @@ input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
 }
 @keyframes brushSweep{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
 .mascot{
-  width:132px;height:132px;margin:6px auto 12px;display:grid;
-  grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:0;
+  width:132px;height:132px;margin:6px auto 12px;
   animation:mascotPop .7s cubic-bezier(.2,1.7,.4,1) .45s both;
+  filter:drop-shadow(3px 3px 0 rgba(0,0,0,.30));
 }
 @keyframes mascotPop{0%{transform:scale(0) rotate(-28deg);opacity:0}70%{transform:scale(1.16) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(-2deg);opacity:1}}
-.mascot .px{background:transparent;}
-.mascot .px.face{background:var(--ink);}
-.mascot .px.eye{background:#FFFFFF;}
-.mascot .px.dot{background:var(--brand);}
+.mascot svg{width:100%;height:100%;display:block;border-radius:14px;}
+.mascot-note{text-align:center;font-size:12px;font-weight:800;color:var(--ink-2);margin:-6px 0 10px;}
+.pet{
+  width:46px;height:46px;display:inline-block;vertical-align:-9px;margin-right:4px;
+  animation:petBob 2.6s ease-in-out infinite;
+  filter:drop-shadow(2px 2px 0 rgba(0,0,0,.28));
+}
+.pet svg{width:100%;height:100%;display:block;border-radius:10px;}
+@keyframes petBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
+.pl-sub{margin-left:10px;font-weight:800;color:var(--ink-2);}
+.pl-sub b{color:var(--deep);}
+.topup-btn{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  background:var(--accent);border:2.5px solid var(--ink);border-radius:11px;
+  padding:7px 14px;font-weight:800;font-size:13.5px;cursor:pointer;color:var(--ink);
+  box-shadow:3px 3px 0 rgba(0,0,0,.85);font-family:inherit;
+}
+.topup-btn:hover:not(:disabled){background:var(--brand);}
+.topup-btn:disabled{background:#E4EAEC;color:#8A9499;box-shadow:none;cursor:not-allowed;border-color:#B9C2C6;}
+.cap-note{margin-top:10px;padding:9px 12px;border:2px dashed rgba(0,0,0,.28);border-radius:11px;font-size:12.5px;font-weight:700;color:var(--ink-2);line-height:1.6;}
+.cap-note b{color:var(--ink);}
 .victory-stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
 .victory-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;}
 
@@ -282,7 +299,7 @@ input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
   <!-- ===================== 顶部 ===================== -->
   <header class="topbar">
     <div class="brand">
-      <h1>1024 位运算<span class="badge">BIT LAB</span></h1>
+      <h1><span class="pet" id="pet" aria-hidden="true"></span>1024 位运算<span class="badge">BIT LAB</span></h1>
       <p class="subtitle">16 格 × 64 位 = <b>1024 位寄存器</b>　|　大数字 = 这一串 64 位里 1 的个数</p>
     </div>
     <div class="stats">
@@ -297,7 +314,7 @@ input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
     <!-- 左：棋盘 -->
     <section class="panel">
       <div class="progress-row">
-        <div class="progress-label">已点亮 <b id="litCount">0</b> / 1024 位</div>
+        <div class="progress-label">已点亮 <b id="litCount">0</b> / 1024 位<span class="pl-sub" id="fullLabel">满格 0 / 12</span></div>
         <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
       </div>
 
@@ -322,8 +339,12 @@ input[type=text]:focus{outline:3px solid var(--accent);outline-offset:1px;}
       <p class="rule-note">
         规则说明：两个同值格合并 = 真实按位或 <span class="mono">A OR B</span>，再把结果补足到 2 倍的 1（标注「补 N 位」）。
         因为按位或是「1 的总数守恒」的运算，且 4×4 棋盘最多只能同时堆住 12 个满格，
-        所以<b>满格堆到 12 个后，新格会直接补满 64 个 1</b>（否则 1024 位永远凑不齐）；
-        走投无路时也可点击未满的格子执行「终局补位」把它补满。
+        所以<b>满格堆到 12 个后，新格会直接补满 64 个 1</b>（否则 1024 位永远凑不齐）。
+      </p>
+      <p class="rule-note">
+        关于「满格」：一格最多承载 <b>64 个 1</b>，满格之后<b>位已用尽，无法再叠加</b>。
+        所以除了「满 12 个后新格自动补满」，你还可以随时点开任意<b>未满</b>的格子，在右侧「64 位解读」里点
+        <b>「补位到满格」</b>（每局 <b>4</b> 次）—— 这是用来在走投无路时收尾的底牌，不是刷分用的。
       </p>
       <p class="hint">
         操作：<b>方向键</b> / <b>WASD</b> / <b>触屏滑动</b>（也可用下方方向按钮）· 相同数字相撞合并翻倍 · <b>点击任意格子</b>查看 64 位解读<br>
@@ -453,6 +474,7 @@ const bestEl       = $('best');
 const stepsEl      = $('steps');
 const litCountEl   = $('litCount');
 const progressFill = $('progressFill');
+const fullLabel   = $('fullLabel');
 const bannerEl     = $('banner');
 const decodeBody   = $('decodeBody');
 const opBody       = $('opBody');
@@ -472,6 +494,10 @@ let tileSeq = 0;
 let score = 0, best = 0, steps = 0;
 let selectedId = null;
 let over = false, won = false;
+/* 手动补位次数：每局 4 次。满格（64 个 1）位已用尽无法再叠加，
+   所以提供有限的「补位」把未满格直接补满 —— 保证任何局面都有出路，不会死锁。 */
+const TOPUP_CHARGES = 4;
+let topupLeft = TOPUP_CHARGES;
 let moveQueue = [];
 let processing = false;
 let mergeLog = [];          // 合并历史（可回看）
@@ -803,6 +829,8 @@ function updateStats(){
   const lit = grid.reduce((s, t) => s + (t ? t.value : 0), 0);
   litCountEl.textContent = lit;
   progressFill.style.width = (lit / TOTAL_BITS * 100).toFixed(2) + '%';
+  const fc = fullCount();
+  fullLabel.innerHTML = '满格 <b>' + fc + '</b> / ' + FULL_THRESHOLD + '（满 ' + FULL_THRESHOLD + ' 后新格自动补满）';
 }
 
 /* ==========================================================================
@@ -921,14 +949,16 @@ async function doMove(dir){
   if (checkVictory()){ triggerVictory(); return; }
   if (!hasMoves()){
     over = true;
-    showBanner('没有可移动的格子了 —— 游戏结束。点击未满的格子可执行「终局补位」把它补满，或点「重开一局」。', true);
+    showBanner('没有可移动的格子了 —— 游戏结束。点任意<b>未满</b>的格子，右侧「64 位解读」里会出现「补位到满格」按钮，用它收尾；或点「重开一局」。', true);
   }
 }
 
-/* 终局补位：把一格直接补满到 64 个 1（沿用本作的「补位」语言） */
+/* 终局补位：把一格直接补满到 64 个 1（沿用本作的「补位」语言；每局有限次数） */
 function doTopUp(tile){
   const idx = grid.indexOf(tile);
   if (idx < 0 || tile.value >= 64) return;
+  if (topupLeft <= 0) return;
+  topupLeft--;
   const el = tileEls.get(tile.id);
   const dots = el ? el.querySelectorAll('.tile-dots .dot') : null;
   const zeros = [];
@@ -962,7 +992,7 @@ function doTopUp(tile){
       showBanner('已补位 ' + need + ' 位 —— 该格现在是满格（64 个 1）。', false);
       if (!hasMoves()){
         over = true;
-        showBanner('还剩未满的格子：点击它执行「终局补位」补满，或点「重开一局」。', true);
+        showBanner('还剩未满的格子：点它，再在右侧「64 位解读」里点「补位到满格」（本局还剩 ' + topupLeft + ' 次），或点「重开一局」。', true);
       }
     }
   }, need * 22 + 140);
@@ -1045,7 +1075,7 @@ document.querySelectorAll('.dpad .btn').forEach(function(btn){
   btn.addEventListener('click', function(){ requestMove(btn.dataset.dir); });
 });
 
-/* —— 点击格子 → 解读面板（结束态下点击未满格 = 执行终局补位） —— */
+/* —— 点击格子 → 解读面板（面板里有「补位」按钮，满格时会说明为何无法再叠加） —— */
 boardEl.addEventListener('click', function(e){
   const tileEl = e.target.closest ? e.target.closest('.tile-wrap') : null;
   if (!tileEl) return;
@@ -1056,10 +1086,6 @@ boardEl.addEventListener('click', function(e){
   selectedId = (selectedId === id) ? null : id;
   updateSelection();
   renderDecodePanel();
-
-  if (over && tile.value < 64){
-    doTopUp(tile);
-  }
 });
 
 function updateSelection(){
@@ -1102,8 +1128,24 @@ function renderDecodePanel(){
         (grid.slice(0, idx + 1).reduce((s, x) => s + (x ? x.value : 0), 0)) + ' / 1024</dd>' +
     '</dl>' +
     '<p class="hint">位序：索引 0 = 最高位（2⁶³），索引 63 = 最低位（2⁰）；每 8 位 = 1 字节（高位在前）。' +
-    'IPv6 采用接口标识符写法：64 位放在<b>低 64 位</b>（后 4 组），前 4 组左补 0000。</p>';
+    'IPv6 采用接口标识符写法：64 位放在<b>低 64 位</b>（后 4 组），前 4 组左补 0000。</p>' +
+    (t.value >= 64
+      ? '<div class="cap-note"><b>这一格已经是满格。</b>64 个位全是 1 —— <b>位已用尽，无法再叠加</b>，满格就是这一格能承载的上限。<br>' +
+        '想继续推进，请把<b>别的未满格</b>补满或合并：16 格全部满格时，1024 个 1 就会同时点亮。</div>'
+      : '<button class="topup-btn" id="btnTopUp"' + (topupLeft > 0 ? '' : ' disabled') + '>补位到满格（64 个 1）· 本局还剩 ' + topupLeft + ' 次</button>' +
+        '<div class="cap-note">这一格还有 <b>' + (64 - t.value) + '</b> 个位是 0。<b>补位</b>会直接把它们全部置 1。' +
+        '满格之后位就用尽了，所以这是一张<b>有限的底牌</b>（每局 ' + TOPUP_CHARGES + ' 次）—— 用来在走投无路时收尾，不是用来刷分的。</div>');
 }
+
+/** 解读面板里的「补位」按钮（事件委托，面板每次重绘都会换节点） */
+decodeBody.addEventListener('click', function(e){
+  const btn = e.target.closest ? e.target.closest('#btnTopUp') : null;
+  if (!btn) return;
+  const t = grid.find(function(x){ return x && x.id === selectedId; });
+  if (!t || t.value >= 64) return;
+  if (topupLeft <= 0){ showBanner('本局的补位次数已经用完了 —— 试试用方向键继续合并。', true); return; }
+  doTopUp(t);
+});
 
 /* ==========================================================================
    七、合并演出（A OR B = C）
@@ -1294,28 +1336,37 @@ function paintBitmap(){
   }
 }
 
+/* ==========================================================================
+   官方 TRAE 机器人吉祥物（取自 https://www.trae.cn/ 的站点图标 favicon.png，
+   48×48 像素级还原：绿色机器人头 + 左下缺口 + 两颗菱形眼；主色 #32F08C。
+   以内联 SVG 承载 —— 零外部请求、任意尺寸不糊、背景可透明适配。
+   ========================================================================== */
+const TRAE_GREEN = '#32F08C';
+const TRAE_DARK  = '#0A0B0D';
+/** 机器人轮廓：顶栏 y13-17 / 左壁 x8-13 / 右壁 x35-40 / 底栏 y31-36（左下留缺口） */
+const TRAE_BODY_D = 'M8 13 H40 V36 H13 V31 H35 V17 H8 Z';
+/** 两颗菱形眼 */
+const TRAE_EYE_L_D = 'M20 21 L22.5 23.5 L20 26 L17.5 23.5 Z';
+const TRAE_EYE_R_D = 'M29.5 21 L32.25 23.5 L29.5 26 L26.75 23.5 Z';
+
+/** 官方 TRAE 机器人 SVG（页面内多处复用：顶栏宠物、胜利吉祥物） */
+function traeSvg(){
+  return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TRAE 机器人">' +
+    '<rect x="0" y="0" width="48" height="48" rx="7" fill="' + TRAE_DARK + '"/>' +
+    '<path d="' + TRAE_BODY_D + '" fill="' + TRAE_GREEN + '"/>' +
+    '<path d="' + TRAE_EYE_L_D + '" fill="' + TRAE_GREEN + '"/>' +
+    '<path d="' + TRAE_EYE_R_D + '" fill="' + TRAE_GREEN + '"/>' +
+  '</svg>';
+}
+
 function buildMascot(){
-  /* 像素吉祥物：黑方块脸 + 双白像素眼 + 一枚绿色像素点 */
-  const art = [
-    '........',
-    '.#######',
-    '.#######',
-    '.#WW#WW#',
-    '.#WW#WW#',
-    '.####G##',
-    '.#######',
-    '.#######'
-  ];
-  mascotEl.innerHTML = '';
-  const frag = document.createDocumentFragment();
-  for (const row of art){
-    for (const ch of row){
-      const p = document.createElement('i');
-      p.className = 'px' + (ch === '#' ? ' face' : (ch === 'W' ? ' eye' : (ch === 'G' ? ' dot' : '')));
-      frag.appendChild(p);
-    }
-  }
-  mascotEl.appendChild(frag);
+  mascotEl.innerHTML = traeSvg();
+}
+
+/** 顶栏的小宠物：官方 TRAE 机器人，随页面轻微浮动 */
+function buildPet(){
+  const p = $('pet');
+  if (p) p.innerHTML = traeSvg();
 }
 
 /* —— bokeh 粒子 —— */
@@ -1412,28 +1463,34 @@ function roundRect(ctx, x, y, w, h, r){
 }
 
 function drawMascotOnCanvas(ctx, x, y, px){
-  const art = [
-    '........',
-    '.#######',
-    '.#######',
-    '.#WW#WW#',
-    '.#WW#WW#',
-    '.####G##',
-    '.#######',
-    '.#######'
-  ];
-  for (let r = 0; r < art.length; r++){
-    for (let c = 0; c < art[r].length; c++){
-      const ch = art[r][c];
-      if (ch === '.') continue;
-      ctx.fillStyle = (ch === '#') ? '#000000' : (ch === 'W' ? '#FFFFFF' : '#73F99A');
-      ctx.fillRect(x + c * px, y + r * px, px, px);
-    }
-  }
+  /* 官方 TRAE 机器人（与页面内 SVG 同一套几何）：48 单位坐标系 → 8 格 × px */
+  const s = (px * 8) / 48;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.fillStyle = TRAE_DARK;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(0, 0, 48, 48, 7); else ctx.rect(0, 0, 48, 48);
+  ctx.fill();
+  ctx.fillStyle = TRAE_GREEN;
+  ctx.beginPath();
+  ctx.moveTo(8, 13); ctx.lineTo(40, 13); ctx.lineTo(40, 36); ctx.lineTo(13, 36);
+  ctx.lineTo(13, 31); ctx.lineTo(35, 31); ctx.lineTo(35, 17); ctx.lineTo(8, 17);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(20, 21); ctx.lineTo(22.5, 23.5); ctx.lineTo(20, 26); ctx.lineTo(17.5, 23.5); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(29.5, 21); ctx.lineTo(32.25, 23.5); ctx.lineTo(29.5, 26); ctx.lineTo(26.75, 23.5); ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function buildCardCanvas(){
-  const W = 1200, H = 900, S = 2;
+  /* W×H 为逻辑尺寸，S 为像素密度倍率 → 实际输出 2400×2360。
+     H 必须容得下：标题 128 / 副标题 188 / 位图 216+701=917 / 统计两行 963·997 / 落款 1106 */
+  const W = 1200, H = 1180, S = 2;
   const cv = document.createElement('canvas');
   cv.width = W * S; cv.height = H * S;
   const ctx = cv.getContext('2d');
@@ -1482,11 +1539,11 @@ function buildCardCanvas(){
   ctx.fillStyle = '#000000';
   ctx.font = '800 22px "PingFang SC","Microsoft YaHei",sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('16 个 64 位槽位 × 64 个 1 = 1024 个位全部点亮', W / 2, 188);
+  ctx.fillText('16 个 64 位槽位 × 64 个 1 = 1024 个位全部点亮', W / 2, 198);
 
   // 32×32 = 1024 点位图
   const cell = 19, gap = 3, gridSize = 32 * cell + 31 * gap;
-  const ox = (W - gridSize) / 2, oy = 216;
+  const ox = (W - gridSize) / 2, oy = 230;
   const grad = ctx.createLinearGradient(ox, oy, ox + gridSize, oy + gridSize);
   grad.addColorStop(0, '#D7FCAE');
   grad.addColorStop(0.45, '#90CC78');
@@ -1522,18 +1579,22 @@ function buildCardCanvas(){
     ['达成时间', dateStr]
   ];
   const lineY = oy + gridSize + 46;
+  const row2Y = lineY + 40;
+  const colX  = [108, 358, 608];
   ctx.textAlign = 'left';
-  let x = 108;
-  items.forEach(function(it, i){
-    if (i === 3 || i === 4){ x = 108; }
+  function drawStat(label, value, x, y){
     ctx.fillStyle = '#5A6B5C';
     ctx.font = '800 17px "PingFang SC","Microsoft YaHei",sans-serif';
-    ctx.fillText(it[0], x, lineY + (i >= 3 ? 34 : 0));
+    ctx.fillText(label, x, y);
     ctx.fillStyle = '#000000';
     ctx.font = '900 24px "Arial Black","PingFang SC","Microsoft YaHei",sans-serif';
-    ctx.fillText(it[1], x + 78, lineY + (i >= 3 ? 34 : 0));
-    if (i < 2) x += 250;
-  });
+    ctx.fillText(value, x + 78, y);
+  }
+  drawStat(items[0][0], items[0][1], colX[0], lineY);   // 昵称
+  drawStat(items[1][0], items[1][1], colX[1], lineY);   // 步数
+  drawStat(items[2][0], items[2][1], colX[2], lineY);   // 分数
+  drawStat(items[3][0], items[3][1], colX[0], row2Y);  // 点亮位数
+  drawStat(items[4][0], items[4][1], colX[1], row2Y);  // 达成时间
 
   // 底部落款
   ctx.fillStyle = '#000000';
@@ -1595,6 +1656,7 @@ function saveBest(v){
 function restart(){
   over = false; won = false;
   score = 0; steps = 0; selectedId = null;
+  topupLeft = TOPUP_CHARGES;                 // 重开一局，补位次数恢复
   mergeLog = []; showQueue = []; showing = false;
   hideMergeOverlay();
   hideBanner();
@@ -1640,6 +1702,7 @@ window.addEventListener('orientationchange', function(){ setTimeout(relayout, 20
 /* 初始化 */
 buildBitmapDom();
 buildMascot();
+buildPet();
 loadStore();
 restart();
 relayout();
