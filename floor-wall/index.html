@@ -609,6 +609,8 @@ var REFRESH_MS = 180000;         // 自动探查周期：3 分钟（镜像每 15
    ========================================================================== */
 var MIRROR_ABS = 'https://2375351829.github.io/trae-1024-builder-works/data/floors.json';
 var MIRROR_REL = '../data/floors.json';
+/** 自有服务器上的实时楼层接口（服务端代理论坛接口，带 ACAO:* 头，跨源可直取） */
+var SELF_API = 'https://traedemo.lfzy.top/trae1024/api/floors.json';
 var PROBE_TIMEOUT = 9000;        // 单条通道超时（ms）
 var PAGE_SIZE  = 20;             // 论坛每页 20 层
 var SAMPLE_PAGES = 12;           // 均匀采样页数（B3 性能策略）
@@ -1691,9 +1693,20 @@ function rssUrl() { return 'https://forum.trae.cn/t/topic/' + TOPIC_ID + '.rss';
 /** 本次探查要试的通道（按优先级排列） */
 function probeChannels() {
   var list = [];
-  if (!IS_FILE) list.push({ id: 'mirror-rel', label: '本站镜像（同源）', kind: 'mirror', url: MIRROR_REL });
+  // ① 自有服务器：页面部署在 traedemo.lfzy.top 时，同源直取，零 CORS 成本
+  if (location.pathname.indexOf('/trae1024/') >= 0) {
+    list.push({ id: 'self-same', label: '自有服务器（同源）', kind: 'mirror', url: '/trae1024/api/floors.json' });
+  }
+  // ② 自有服务器（跨源）：服务端代理论坛接口，返回头带 ACAO:*
+  list.push({ id: 'self-abs', label: '自有服务器（跨源）', kind: 'mirror', url: SELF_API });
+  // ③ GitHub Pages 镜像（同源 / 跨源）
+  if (location.pathname.indexOf('trae-1024-builder-works') >= 0) {
+    list.push({ id: 'mirror-rel', label: '本站镜像（同源）', kind: 'mirror', url: MIRROR_REL });
+  }
   list.push({ id: 'mirror-abs', label: '本站镜像（跨源）', kind: 'mirror', url: MIRROR_ABS });
+  // ④ 论坛直连（官方若哪天开启 CORS 即刻生效）
   list.push({ id: 'direct', label: '论坛直连', kind: 'topic', url: topicUrl() });
+  // ⑤ 公共 CORS 代理 ×2 + RSS 通道（与前面完全独立的第三方路径）
   list.push({ id: 'proxy-a', label: '公共代理 A', kind: 'topic', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(topicUrl()) });
   list.push({ id: 'proxy-b', label: '公共代理 B', kind: 'topic', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(topicUrl()) });
   list.push({ id: 'rss', label: 'RSS 通道', kind: 'rss', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl()) });
