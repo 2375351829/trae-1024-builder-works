@@ -62,8 +62,13 @@ input,select,textarea{font-family:inherit;font-weight:600;font-size:14px;color:v
   border-bottom:2px solid var(--ink);
 }
 .topbar-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.brand{flex:1 1 320px;min-width:0}
+.brand{flex:1 1 320px;min-width:0;display:flex;align-items:flex-start;gap:12px}
 .brand-title{font-size:clamp(19px,3.4vw,27px);font-weight:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;line-height:1.15}
+/* 官方 TRAE 机器人小宠物（1:1 原图 + 轻微浮动；不旋转，避免破坏像素对齐） */
+.pet{width:48px;height:48px;flex:0 0 auto;margin-top:2px;animation:petBob 2.6s ease-in-out infinite;
+     filter:drop-shadow(2px 2px 0 rgba(0,0,0,.18))}
+.pet img{width:100%;height:100%;display:block;image-rendering:pixelated;border-radius:10px}
+@keyframes petBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .brand-sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:700}
 .badge-sticker{
   display:inline-block;background:var(--accent);border:2.5px solid var(--ink);border-radius:999px;
@@ -341,6 +346,7 @@ table.facts td b{font-variant-numeric:tabular-nums}
 <header class="topbar">
   <div class="topbar-in">
     <div class="brand">
+      <span class="pet" id="pet" aria-hidden="true"></span>
       <div class="brand-title">
         1024 楼层实况墙
         <span class="badge-sticker">Floor Wall</span>
@@ -1482,16 +1488,36 @@ function renderFloorCard(n) {
 /* ==========================================================================
    12. 冲楼预测卡（Canvas → PNG）
    ========================================================================== */
+/* ==========================================================================
+   官方 TRAE 机器人吉祥物
+   —— 直接内嵌 TRAE 官网（https://www.trae.cn/）站点图标 favicon.png 的**原始字节**
+      （48×48 PNG，488 B → base64 652 字符）：零外部请求，且**逐像素一致**。
+   —— 与作品 A《1024 位运算》用的是同一张图、同一段字节，两件作品吉祥物完全统一。
+   ========================================================================== */
+var TRAE_ICON_B64 = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAF9SURBVHgB7Zm9SsNQFMf/EYWiVB2KKGLBScHFN9BJurmoa0dn9QGqD1CdHbtWFzd10jfQQdBJqIgKGYw4VCR+nGD0ptqmsSectD0/CKXpbXJ+3HvOyYfVP5B+RxvTgzZHBaRRAWlUQBoVkEYFpOkNGzC0MgtJnPJZw99DBcZ2FiFJmIDmgDSdn8S1PB9d4aFwiDgY2cwhnZuK9J/IAq5TxevNI+Lg7amKqGgO/DrgYIplTNPnAyN9E8OYPF5FZmOu7hgKPrufZ+svkXOgHhR8di/vfWbW5719dvE0MMYPPjUz6m3E3doBWoFlBszgfUjCnAkzeB+6TGl1JuJNYuOJk/W1ccMiQGW1slwKlFe7eAJ7+2cJuZ8lsrJUwsvF/fc+us5JxBIiTIna4H1MCY7gCbYkJij464Xdhg3Jl3D/0bT+gj0HmummXMET2omlCc2By/GtwHeq3dO3BSQFXULSdN8dGdV6p3yOpGDpOzJhVEAaFZBGBaRRAWlUQJoPEeV5RYlN/QYAAAAASUVORK5CYII=';
+var TRAE_ICON_SRC = 'data:image/png;base64,' + TRAE_ICON_B64;
+var TRAE_ICON_IMG = new Image();
+TRAE_ICON_IMG.src = TRAE_ICON_SRC;
+
+/** 顶栏小宠物：官方 TRAE 机器人（与作品 A、预测卡同一张原图） */
+function buildPet() {
+  var p = $('pet');
+  if (p) p.innerHTML = '<img src="' + TRAE_ICON_SRC + '" alt="TRAE 机器人" width="48" height="48">';
+}
+
+/** 官方 TRAE 机器人原图 → 最近邻整数倍放大，像素与官网完全一致 */
 function drawMascot(g, x, y, s) {
+  if (TRAE_ICON_IMG.complete && TRAE_ICON_IMG.naturalWidth) {
+    g.save();
+    g.imageSmoothingEnabled = false;
+    g.drawImage(TRAE_ICON_IMG, x, y, s, s);
+    g.restore();
+    return;
+  }
+  /* 兜底：原图尚未解码完成时先画一个占位方块，不让卡片导出失败 */
   g.save();
-  g.translate(x, y);
-  g.fillStyle = '#000000';
-  g.fillRect(0, 0, s, s);
-  g.fillStyle = '#FFFFFF';
-  g.fillRect(s * 0.20, s * 0.28, s * 0.19, s * 0.24);
-  g.fillRect(s * 0.60, s * 0.28, s * 0.19, s * 0.24);
-  g.fillStyle = '#73F99A';
-  g.fillRect(s * 0.62, s * 0.60, s * 0.17, s * 0.17);
+  g.fillStyle = '#0A0B0D';
+  g.fillRect(x, y, s, s);
   g.restore();
 }
 function roundRect(g, x, y, w, h, r) {
@@ -1600,8 +1626,8 @@ function buildCard() {
     g.beginPath(); g.moveTo(mx, barY - 10); g.lineTo(mx, barY + 50); g.stroke();
   }
 
-  // 吉祥物 + 页脚
-  drawMascot(g, 70, 962, 68);
+  // 吉祥物（官方 TRAE 机器人原图，48×48 → 2 倍 = 96，整数倍不糊）
+  drawMascot(g, 58, 938, 96);
   g.fillStyle = '#3A4A50'; g.font = '800 22px ' + FONT;
   g.fillText('TRAE 社区 1024 狂欢周 · 玩法一盖楼 · forum.trae.cn/t/topic/325833', 158, 990);
   g.fillText('生成时间 ' + fmtDT(now) + ' · 数据可能随楼层实时变化', 158, 1022);
@@ -2242,6 +2268,7 @@ function boot() {
   try {
     loadBaseline();
     var restored = loadSnapshot();
+    buildPet();
     bindEvents();
     renderAll();
     if (restored) {
