@@ -1,0 +1,2043 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="TRAE 社区 1024 狂欢周 · 玩法一盖楼主帖（325833）楼层实况墙：楼层时间轴、里程碑轨、我的楼层、1024 楼预测器与冲楼预测卡。">
+<title>1024 楼层实况墙 · Floor Wall</title>
+<link rel="icon" href="data:,">
+<style>
+/* ==========================================================================
+   1024 楼层实况墙 · Floor Wall
+   视觉令牌严格取自官方海报实测值（索引-index.md §5.5）：
+     底 #F4F8F9 + 极浅方格纸纹 | 卡片 #FFFFFF + 极轻投影 | 主强调 #D7FCAE
+     描边/文字 #000000 | 浅绿 #CCFC9C | 中绿 #90CC78 | 深绿 #6CA83C
+     品牌亮绿 #73F99A | 光斑绿 #79B446 | 灌水灰 #9AA0A6
+   ========================================================================== */
+:root{
+  --bg:#F4F8F9;
+  --card:#FFFFFF;
+  --accent:#D7FCAE;
+  --accent2:#CCFC9C;
+  --mid:#90CC78;
+  --deep:#6CA83C;
+  --glow:#73F99A;
+  --spot:#79B446;
+  --ink:#000000;
+  --spammer:#9AA0A6;
+  --muted:#6C7A80;
+  --line:rgba(0,0,0,.12);
+  --grid:rgba(0,0,0,.045);
+  --font:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.055);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font);
+  color:var(--ink);
+  background-color:var(--bg);
+  /* 极浅方格纸纹（2px 网格） */
+  background-image:
+    repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 22px),
+    repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 22px);
+  -webkit-font-smoothing:antialiased;
+  font-weight:600;
+  line-height:1.55;
+}
+a{color:inherit}
+b,strong{font-weight:900}
+h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.02em}
+button{font-family:inherit;font-weight:900;cursor:pointer}
+input,select,textarea{font-family:inherit;font-weight:600;font-size:14px;color:var(--ink)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 72px}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:rgba(244,248,249,.92);
+  backdrop-filter:saturate(1.3) blur(8px);
+  border-bottom:2px solid var(--ink);
+}
+.topbar-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.brand{flex:1 1 320px;min-width:0}
+.brand-title{font-size:clamp(19px,3.4vw,27px);font-weight:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap;line-height:1.15}
+.brand-sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:700}
+.badge-sticker{
+  display:inline-block;background:var(--accent);border:2.5px solid var(--ink);border-radius:999px;
+  padding:2px 11px;font-size:12px;font-weight:900;transform:rotate(-2deg);
+  box-shadow:2px 2px 0 rgba(0,0,0,.85);white-space:nowrap;
+}
+.badge-sticker.ghost{background:#fff}
+.topbar-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+.btn{
+  border:2.5px solid var(--ink);background:#fff;color:var(--ink);
+  border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:900;
+  box-shadow:2.5px 2.5px 0 var(--ink);transition:transform .08s ease,box-shadow .08s ease,background .15s;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn:hover{background:var(--accent2)}
+.btn:active{transform:translate(2px,2px);box-shadow:.5px .5px 0 var(--ink)}
+.btn.accent{background:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:12px;border-width:2px;box-shadow:2px 2px 0 var(--ink);border-radius:9px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-link{background:none;border:none;box-shadow:none;text-decoration:underline;padding:0;font-size:12.5px;color:var(--muted)}
+
+/* ---------- 降级横幅（硬要求） ---------- */
+.banner{
+  margin:14px 0 0;background:var(--ink);color:#fff;border-radius:var(--radius);
+  padding:13px 16px;display:flex;gap:14px;align-items:flex-start;
+  box-shadow:4px 4px 0 var(--accent);border:3px solid var(--ink);
+}
+.banner .b-ico{font-size:24px;line-height:1;flex:0 0 auto;margin-top:1px}
+.banner .b-body{flex:1 1 auto;min-width:0}
+.banner .b-title{font-weight:900;font-size:15px;color:var(--accent);letter-spacing:.01em}
+.banner .b-text{font-size:13px;margin-top:4px;color:#EAF4EC;line-height:1.6}
+.banner .b-text code{background:rgba(255,255,255,.13);padding:1px 5px;border-radius:5px;font-size:12px}
+.banner .b-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.banner .b-act .btn{box-shadow:2.5px 2.5px 0 var(--accent);border-color:#fff}
+.banner.is-hidden{display:none}
+.banner.ok{background:var(--deep);box-shadow:4px 4px 0 var(--glow)}
+.banner.ok .b-title{color:#fff}
+/* 中性信息条：默认状态。跨域受限是浏览器同源策略的平台特性，不是故障，故不做告警配色 */
+.banner.info{
+  background:#FFFFFF;color:var(--ink);border:2.5px solid var(--ink);
+  box-shadow:4px 4px 0 var(--accent);padding:11px 15px;
+}
+.banner.info .b-ico{font-size:17px;margin-top:1px}
+.banner.info .b-title{color:var(--ink);font-size:13.5px}
+.banner.info .b-text{color:#25353B;font-size:12.5px;margin-top:3px}
+.banner.info .b-text code{background:#EDF3F5;color:var(--ink);border:1px solid rgba(0,0,0,.14)}
+.banner.info .b-act .btn{border-color:var(--ink);box-shadow:2.5px 2.5px 0 var(--ink)}
+.banner.info .b-act .btn:hover{background:var(--accent2)}
+
+/* ---------- KPI 条 ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:18px 0}
+.kpi{
+  background:var(--card);border:2.5px solid var(--ink);border-radius:var(--radius);
+  padding:11px 13px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.kpi .k-label{font-size:11.5px;color:var(--muted);font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.kpi .k-val{font-size:clamp(20px,3.6vw,28px);font-weight:900;line-height:1.15;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .k-sub{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px}
+.kpi.hl{background:var(--accent)}
+.kpi.hl .k-label{color:#2C4416}
+.kpi .k-val small{font-size:12px;font-weight:800;color:var(--muted);margin-left:3px}
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:var(--card);border:2.5px solid var(--ink);border-radius:var(--radius);
+  padding:16px 17px 18px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.card h2{font-size:17px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card .desc{font-size:12.5px;color:var(--muted);font-weight:700;margin:2px 0 12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.two-col{grid-template-columns:1fr}}
+
+/* ---------- 时间轴 ---------- */
+.tl-wrap{position:relative;border:2px solid var(--ink);border-radius:12px;background:#FCFEFE;overflow:hidden}
+#timeline{display:block;width:100%;height:440px;touch-action:pan-y}
+.tip{
+  position:absolute;pointer-events:none;z-index:20;max-width:290px;
+  background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:10px;
+  padding:8px 10px;font-size:12px;line-height:1.5;opacity:0;transform:translateY(4px);
+  transition:opacity .12s ease,transform .12s ease;box-shadow:3px 3px 0 rgba(115,249,154,.8);
+}
+.tip.on{opacity:1;transform:translateY(0)}
+.tip .t-n{font-weight:900;color:var(--glow);font-size:13px}
+.tip .t-meta{color:#B9C7CC;margin:2px 0 4px;font-size:11.5px}
+.tip .t-body{color:#fff;word-break:break-word}
+.tip .t-tag{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:900;padding:1px 7px;border-radius:999px}
+.tip .t-tag.v{background:var(--accent);color:#14330A}
+.tip .t-tag.i{background:var(--spammer);color:#111}
+.tip .t-tag.n{background:#fff;color:#111}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);font-weight:800;margin-top:10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);vertical-align:-1px;margin-right:5px}
+.legend .sw-v{background:var(--accent)}
+.legend .sw-i{background:var(--spammer)}
+.legend .sw-m{background:#fff;border-radius:0;width:16px;height:0;border-top:2px dashed var(--ink);border-right:0;border-bottom:0;border-left:0}
+.legend .sw-x{background:var(--glow);width:13px;height:13px}
+
+.daystrip{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.daycell{
+  flex:1 1 84px;min-width:74px;border:2px solid var(--ink);border-radius:9px;padding:6px 8px;background:#fff;
+  position:relative;overflow:hidden;
+}
+.daycell .d-n{font-size:11px;font-weight:900;color:var(--muted)}
+.daycell .d-v{font-size:16px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.daycell .d-bar{height:6px;border-radius:3px;background:var(--accent2);margin-top:4px;border:1px solid rgba(0,0,0,.25)}
+.daycell .d-bar i{display:block;height:100%;background:var(--mid);border-radius:3px}
+
+/* ---------- 楼层贴纸卡 ---------- */
+.floorcard{
+  display:none;margin-top:14px;background:var(--accent);border:3px solid var(--ink);
+  border-radius:12px;padding:12px 14px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink);
+  position:relative;
+}
+.floorcard.on{display:block}
+.floorcard .fc-top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.floorcard .fc-n{font-size:22px;font-weight:900}
+.floorcard .fc-user{font-size:14px;font-weight:900}
+.floorcard .fc-time{font-size:11.5px;color:#2C4416;font-weight:800;margin-left:auto}
+.floorcard .fc-body{font-size:13px;margin-top:6px;color:#14330A;word-break:break-word;line-height:1.6}
+.floorcard .fc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{display:inline-block;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:999px;border:1.5px solid var(--ink);background:#fff}
+.chip.v{background:var(--accent2)}
+.chip.i{background:var(--spammer);color:#fff}
+.chip.n{background:#fff}
+
+/* ---------- 里程碑轨 ---------- */
+.ms-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:13px}
+.ms{
+  border:2.5px solid var(--ink);border-radius:12px;padding:12px 13px;background:#fff;position:relative;
+}
+.ms.done{background:var(--accent)}
+.ms.pending{background:#fff;background-image:repeating-linear-gradient(45deg,#fff 0 9px,#F7FAFB 9px 18px)}
+.ms .ms-n{font-size:30px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.ms .ms-n span{font-size:12px;font-weight:900;color:var(--muted)}
+.ms .ms-status{display:inline-block;margin-top:7px;font-size:11px;font-weight:900;padding:2px 9px;border-radius:999px;border:1.5px solid var(--ink);background:#fff}
+.ms .ms-status.v{background:var(--accent2)}
+.ms .ms-status.i{background:var(--spammer);color:#fff}
+.ms .ms-status.p{background:#fff}
+.ms .ms-user{font-size:12.5px;font-weight:900;margin-top:7px}
+.ms .ms-body{font-size:11.5px;color:#3A4A50;margin-top:4px;line-height:1.55;max-height:74px;overflow:auto;word-break:break-word}
+.ms .ms-shift{
+  margin-top:9px;border-top:1.5px dashed rgba(0,0,0,.35);padding-top:7px;font-size:11.5px;font-weight:800;line-height:1.6;
+}
+.ms .ms-shift b{background:var(--accent);border-radius:4px;padding:0 5px;border:1px solid rgba(0,0,0,.4)}
+.ms .ms-shift .chain{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10.5px;color:#3A4A50;word-break:break-all}
+
+/* ---------- 表单 ---------- */
+.field{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.field input,.field select{
+  border:2.5px solid var(--ink);border-radius:10px;padding:9px 12px;background:#fff;min-width:0;flex:1 1 200px;
+}
+.field input:focus,.field select:focus,.ta:focus{outline:3px solid var(--glow);outline-offset:1px}
+.ta{
+  width:100%;min-height:132px;border:2.5px solid var(--ink);border-radius:10px;padding:11px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.5;resize:vertical;background:#FCFEFE;
+}
+.msg{font-size:12.5px;font-weight:800;margin-top:9px;min-height:18px}
+.msg.ok{color:#2F7A12}
+.msg.err{color:#B3121A}
+
+/* ---------- 我的楼层 ---------- */
+.mine-empty{font-size:12.5px;color:var(--muted);font-weight:700;padding:10px 0}
+.mine-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px;margin-bottom:11px}
+.mine-sum div{border:2px solid var(--ink);border-radius:10px;padding:7px 9px;background:var(--accent2)}
+.mine-sum .ms-l{font-size:10.5px;color:#2C4416;font-weight:800}
+.mine-sum .ms-v{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.mine-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto}
+.mine-item{border:2px solid var(--ink);border-radius:10px;padding:8px 10px;background:#fff;display:flex;gap:9px;align-items:flex-start}
+.mine-item.mine-valid{background:var(--accent)}
+.mine-item .mi-n{font-weight:900;font-size:14px;flex:0 0 auto;min-width:42px}
+.mine-item .mi-c{flex:1 1 auto;min-width:0}
+.mine-item .mi-t{font-size:11px;color:var(--muted);font-weight:800}
+.mine-item .mi-x{font-size:12px;line-height:1.5;word-break:break-word;margin-top:2px}
+
+/* ---------- 预测器 ---------- */
+.prog{height:20px;border:2.5px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden;margin:9px 0 4px;position:relative}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--mid));transition:width .5s ease}
+.prog b{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--ink)}
+.prog-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:800}
+.rates{margin-top:13px;display:flex;flex-direction:column;gap:8px}
+.rate-row{display:grid;grid-template-columns:118px 1fr 92px;gap:9px;align-items:center;font-size:12.5px;font-weight:800}
+.rate-row .rb{height:13px;border:2px solid var(--ink);border-radius:7px;background:#fff;overflow:hidden}
+.rate-row .rb i{display:block;height:100%;background:var(--accent2)}
+.rate-row.main .rb i{background:var(--mid)}
+.rate-row .rv{text-align:right;font-variant-numeric:tabular-nums}
+.rate-row.main .rname{color:#14330A}
+.eta-big{
+  margin-top:14px;border:3px solid var(--ink);border-radius:12px;background:var(--accent);
+  padding:12px 14px;transform:rotate(-1deg);box-shadow:4px 4px 0 var(--ink);
+}
+.eta-big .e-l{font-size:11.5px;font-weight:900;color:#2C4416}
+.eta-big .e-v{font-size:clamp(18px,3.6vw,25px);font-weight:900;line-height:1.2;margin-top:2px}
+.eta-big .e-s{font-size:11.5px;color:#2C4416;font-weight:800;margin-top:4px}
+.note{font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.65;margin-top:10px;padding-top:9px;border-top:1.5px dashed rgba(0,0,0,.16)}
+
+/* ---------- 冲楼卡 ---------- */
+.card-preview{display:flex;justify-content:center;margin-top:13px}
+#preview{width:100%;max-width:420px;height:auto;border:3px solid var(--ink);border-radius:12px;box-shadow:5px 5px 0 rgba(0,0,0,.85);background:#fff}
+
+/* ---------- 同步模态框 ---------- */
+.modal{
+  position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;padding:18px;
+}
+.modal[hidden]{display:none}
+.modal-box{
+  background:#fff;border:3px solid var(--ink);border-radius:var(--radius);
+  box-shadow:7px 7px 0 var(--accent);padding:18px 19px 20px;
+  max-width:660px;width:100%;max-height:88vh;overflow:auto;
+}
+.modal-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.modal-head h2{font-size:18px;display:flex;align-items:center;gap:9px}
+.modal-head .btn{margin-left:auto}
+
+/* ---------- 关于数据源 ---------- */
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:11px}
+.about-item{border:2px solid var(--ink);border-radius:11px;padding:10px 12px;background:#FCFEFE}
+.about-item .ai-t{font-size:12.5px;font-weight:900;margin-bottom:5px}
+.about-item .ai-b{font-size:11.8px;color:#3A4A50;line-height:1.7;font-weight:700;word-break:break-word}
+.about-item code{background:#EDF3F5;border:1px solid rgba(0,0,0,.14);padding:0 4px;border-radius:4px;font-size:11px}
+
+/* ---------- 步骤 ---------- */
+.steps{counter-reset:s;margin:10px 0 14px;display:flex;flex-direction:column;gap:10px}
+.step{position:relative;padding-left:34px;font-size:13px;font-weight:700;line-height:1.75}
+.step::before{
+  counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--accent);border:2.5px solid var(--ink);font-weight:900;font-size:12.5px;
+  display:flex;align-items:center;justify-content:center;
+}
+.step code{background:#EEF3F5;padding:1px 5px;border-radius:5px;font-size:11.5px;word-break:normal;overflow-wrap:anywhere}
+
+/* ---------- 事实表 ---------- */
+table.facts{width:100%;border-collapse:collapse;font-size:12.5px}
+table.facts th,table.facts td{border:1.5px solid rgba(0,0,0,.28);padding:7px 9px;text-align:left;font-weight:700}
+table.facts th{background:var(--accent2);font-weight:900}
+table.facts td b{font-variant-numeric:tabular-nums}
+
+.foot{font-size:11.5px;color:var(--muted);font-weight:700;text-align:center;padding:22px 10px 6px;line-height:1.7}
+.foot b{color:var(--ink)}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.pill{font-size:11px;font-weight:800;border:1.5px solid rgba(0,0,0,.25);border-radius:999px;padding:2px 9px;background:#fff;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.two-col .card{margin-bottom:0}
+@media(max-width:640px){
+  .wrap{padding:0 11px 56px}
+  .card{padding:13px 13px 15px}
+  #timeline{height:340px}
+  .banner{padding:11px 12px;gap:10px}
+  .banner .b-ico{font-size:20px}
+  .rate-row{grid-template-columns:96px 1fr 78px;font-size:11.5px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ 顶栏 ============================ -->
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="brand-title">
+        1024 楼层实况墙
+        <span class="badge-sticker">Floor Wall</span>
+        <span class="badge-sticker ghost">玩法一 · 盖楼</span>
+      </div>
+      <div class="brand-sub">数据源：TRAE 社区主帖 <b>forum.trae.cn/t/topic/325833</b> ｜ 楼层时间轴 · 里程碑轨 · 我的楼层 · 1024 预测</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn accent" id="btnOpenSync" title="3 步同步 forum.trae.cn 的最新楼层">⟳ 同步最新楼层</button>
+      <button class="btn" id="btnRefresh" title="尝试直接拉取一次主帖 JSON（可能被浏览器跨域策略拦截）">↻ 立即刷新</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ======================= 降级横幅（硬要求） ======================= -->
+  <div class="banner is-hidden" id="banner" role="alert" aria-live="polite">
+    <div class="b-ico" id="bannerIco">⚠️</div>
+    <div class="b-body">
+      <div class="b-title" id="bannerTitle">⚠️ 实时数据获取失败</div>
+      <div class="b-text" id="bannerText"></div>
+      <div class="b-act" id="bannerActions"></div>
+    </div>
+  </div>
+
+  <!-- ============================ KPI ============================ -->
+  <section class="kpis" aria-label="实时战况概览">
+    <div class="kpi">
+      <div class="k-label">当前楼层</div>
+      <div class="k-val" id="kpiFloor">—</div>
+      <div class="k-sub" id="kpiFloorSub">最高楼号</div>
+    </div>
+    <div class="kpi hl">
+      <div class="k-label">距 1024 还差</div>
+      <div class="k-val" id="kpiGap">—</div>
+      <div class="k-sub" id="kpiGapSub">楼</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">参与者</div>
+      <div class="k-val" id="kpiPeople">—</div>
+      <div class="k-sub">独立回帖账号</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">最后回复</div>
+      <div class="k-val" id="kpiLast" style="font-size:clamp(15px,2.6vw,19px)">—</div>
+      <div class="k-sub" id="kpiLastSub">—</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">预计 1024 达成</div>
+      <div class="k-val" id="kpiEta" style="font-size:clamp(15px,2.6vw,19px)">—</div>
+      <div class="k-sub" id="kpiEtaSub">按近 6 小时速率外推</div>
+    </div>
+    <div class="kpi">
+      <div class="k-label">数据源</div>
+      <div class="k-val" id="kpiSrc" style="font-size:clamp(14px,2.4vw,18px)">—</div>
+      <div class="k-sub" id="kpiSrcSub">—</div>
+    </div>
+  </section>
+
+  <!-- ========================= 时间轴 ========================= -->
+  <section class="card">
+    <div class="card-head">
+      <h2>楼层时间轴 <span class="badge-sticker ghost">Timeline</span></h2>
+      <div style="margin-left:auto;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+        <div class="pill-row" style="margin:0">
+          <button class="btn sm" id="btnFitAll">全量视野 0–1024</button>
+          <button class="btn sm accent" id="btnFitReached">聚焦已达楼层</button>
+        </div>
+      </div>
+    </div>
+    <p class="desc">横轴 = 时间（2026-10-19 13:28 起 → 实时）｜纵轴 = 楼层号｜每个圆点 = 一层楼。鼠标悬停看作者 / 时间 / 正文摘要 / 是否为「有效模板回复」；点击可固定为楼层贴纸卡。</p>
+    <div class="tl-wrap" id="tlWrap">
+      <canvas id="timeline" role="img" aria-label="楼层时间轴"></canvas>
+      <div class="tip" id="tlTip"></div>
+    </div>
+    <div class="legend">
+      <span><i class="sw-v"></i>有效模板回复（宽松口径：含「#我是 1024Builder#」等写法）</span>
+      <span><i class="sw-i"></i>灌水 / 无效回复</span>
+      <span><i class="sw-m"></i>里程碑楼层（128 / 256 / 512 / 1024）</span>
+      <span><i class="sw-x"></i>我的楼层</span>
+      <span id="tlCount" style="margin-left:auto"></span>
+    </div>
+    <div class="daystrip" id="dayStrip"></div>
+    <div class="floorcard" id="floorCard"></div>
+  </section>
+
+  <!-- ========================= 里程碑轨 ========================= -->
+  <section class="card">
+    <div class="card-head">
+      <h2>里程碑轨 <span class="badge-sticker ghost">Milestones</span></h2>
+    </div>
+    <p class="desc">官方玩法一规则原文：「盖到 128 楼，256 楼，512 楼，1024 楼等四个指定特殊楼层的朋友…<b>如所在楼层是无效回复，则顺延一楼</b>」。下表按此规则计算每个里程碑的<b>实际落地楼层</b>。</p>
+    <div class="ms-grid" id="msGrid"></div>
+  </section>
+
+  <!-- ======================= 我的楼层 + 预测器 ======================= -->
+  <div class="two-col">
+    <section class="card">
+      <div class="card-head"><h2>我的楼层 <span class="badge-sticker ghost">My Floors</span></h2></div>
+      <p class="desc">输入你的社区昵称 → 高亮你在时间轴上的位置，列出你的每一层楼与正文摘录。</p>
+      <div class="field">
+        <input id="inpName" type="text" placeholder="社区昵称，例如：硬气一点" autocomplete="off" spellcheck="false">
+        <button class="btn accent" id="btnFind">定位我的楼层</button>
+      </div>
+      <div class="pill-row" id="mineChips" style="margin-bottom:8px"></div>
+      <div id="mineResult"><div class="mine-empty">还没有查询。输入昵称后点「定位我的楼层」。</div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>1024 楼预测器 <span class="badge-sticker ghost">Predictor</span></h2></div>
+      <p class="desc">主口径按<b>近 6 小时速率</b>外推；另给近 24 小时与全程均速两档参考（夜间时段会拉低近 6 小时速率）。</p>
+      <div class="prog"><i id="progBar" style="width:0%"></i><b id="progMark" style="left:0%"></b></div>
+      <div class="prog-labels"><span>0</span><span id="progNow">—</span><span>1024</span></div>
+      <div class="rates" id="rates"></div>
+      <div class="eta-big">
+        <div class="e-l">预计 1024 楼达成时刻（主口径：近 6 小时速率）</div>
+        <div class="e-v" id="etaMain">—</div>
+        <div class="e-s" id="etaSub">—</div>
+      </div>
+      <div class="note" id="predictNote"></div>
+    </section>
+  </div>
+
+  <!-- ========================= 冲楼预测卡 ========================= -->
+  <section class="card">
+    <div class="card-head"><h2>冲楼预测卡 <span class="badge-sticker">PNG Generator</span></h2></div>
+    <p class="desc">选择目标楼层（512 / 1024）并填写昵称 → Canvas 本地生成「我的冲楼预测卡」PNG，可直接下载分享（全程本地渲染，不上传任何信息）。</p>
+    <div class="field">
+      <select id="selTarget">
+        <option value="512">目标楼层：512 楼</option>
+        <option value="1024" selected>目标楼层：1024 楼</option>
+      </select>
+      <input id="inpCardName" type="text" placeholder="你的社区昵称" autocomplete="off" spellcheck="false">
+      <button class="btn accent" id="btnMake">生成并下载 PNG</button>
+      <button class="btn" id="btnPreview">仅预览</button>
+    </div>
+    <div class="card-preview"><canvas id="preview" width="1080" height="1080" aria-label="冲楼预测卡预览"></canvas></div>
+  </section>
+
+  <!-- ========================= 关于数据源 ========================= -->
+  <section class="card" id="aboutCard">
+    <div class="card-head"><h2>关于数据源与跨域限制 <span class="badge-sticker ghost">About the Data</span></h2></div>
+    <p class="desc">这个作品的<b>每一个数字都来自真实接口</b>，没有任何编造；同时它把「为什么网页读不到论坛数据」这件事讲清楚了。</p>
+    <div class="about-grid">
+      <div class="about-item">
+        <div class="ai-t">① 数据从哪来</div>
+        <div class="ai-b">公开只读接口 <code>forum.trae.cn/t/topic/325833.json</code>，以及分页变体 <code>/t/325833.json?page=N</code>（每页 20 层）。字段：<code>highest_post_number</code> / <code>last_posted_at</code> / <code>posts_count</code> / <code>participant_count</code> / <code>post_stream.posts[].cooked</code>。</div>
+      </div>
+      <div class="about-item">
+        <div class="ai-t">② 为什么必须手动同步</div>
+        <div class="ai-b">浏览器同源策略要求跨域响应带 <code>Access-Control-Allow-Origin</code> 头。<b>实测该接口不返回这个头</b>（带 <code>Origin</code> 请求头复查过），所以网页里的 <code>fetch()</code> 必然被拦，抛 <code>TypeError: Failed to fetch</code>。这不是作品坏了，是浏览器的安全策略 —— 所以本页改用「打开链接 → 复制 → 粘贴解析」三步法拿数据。</div>
+      </div>
+      <div class="about-item">
+        <div class="ai-t">③ 有效回复怎么判（两套口径都算给你看）</div>
+        <div class="ai-b">官方规则排除的是<b>内容</b>（「重复回复、灌水或与活动无关的内容」），<b>不是排版格式</b>。所以主判定取<b>宽松</b>：<code>#我是 1024Builder#</code> 这类带空白的写法，四行齐全，不算灌水。360 层回复中判出 <b>213 层有效</b>；若改用<b>严格字面口径</b>（正文必须含连续字面「我是1024Builder」），则只有 <b>201 层</b>。</div>
+      </div>
+      <div class="about-item">
+        <div class="ai-t">④ 里程碑怎么算</div>
+        <div class="ai-b">官方规则原文：「盖到 128 楼，256 楼，512 楼，1024 楼…<b>如所在楼层是无效回复，则顺延一楼</b>」。本页从里程碑层起逐层向后找第一个有效模板回复，即该奖位的实际归属层。<b>同一句「顺延一楼」，因判定口径不同会落到不同楼层</b> —— 里程碑卡上两套口径的结果都列出来了。</div>
+      </div>
+    </div>
+    <div class="field" style="margin:14px 0 0">
+      <button class="btn accent" id="btnOpenSync2">⟳ 同步最新楼层</button>
+      <button class="btn" id="btnResetSnapshot">清除本地缓存快照</button>
+      <button class="btn" id="btnReload">↻ 重新加载页面</button>
+    </div>
+  </section>
+
+  <!-- ========================= 事实基线 ========================= -->
+  <section class="card">
+    <div class="card-head"><h2>事实基线与数据说明 <span class="badge-sticker ghost">Ground Truth</span></h2></div>
+    <p class="desc">页面内置一份采样快照（离线也能渲染时间轴）；任何一次成功导入都会覆盖它。</p>
+    <table class="facts">
+      <thead><tr><th>指标</th><th>采样值（2026-10-21 01:00 CST）</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>主帖最高楼号</td><td><b>364</b></td><td>highest_post_number</td></tr>
+        <tr><td>实际存在楼层</td><td><b>361</b>（1 主帖 + 360 回复）</td><td>楼号 80 / 177 / 206 已删帖，页面时间轴按真实楼号显示跳号</td></tr>
+        <tr><td>参与者</td><td><b>233</b></td><td>participant_count</td></tr>
+        <tr><td>最后回复</td><td><b>2026-10-21 00:44</b></td><td>last_posted_at（UTC 2026-10-20T16:44:51Z）</td></tr>
+        <tr><td>主题开楼</td><td><b>2026-10-19 13:28</b></td><td>created_at（UTC 2026-10-19T05:28:03Z）</td></tr>
+        <tr><td>日均楼层</td><td><b>约 247 楼</b></td><td>35.3 小时 361 层 ≈ 10.2 楼/时</td></tr>
+        <tr><td>10-19 / 10-20</td><td><b>203 层 / 152 层</b></td><td>按 CST 自然日统计</td></tr>
+        <tr><td>有效模板回复<br><span style="font-weight:700;color:#6C7A80">（宽松口径 · 主判定）</span></td><td><b>213 层</b> / 360 层回复</td><td>先解码 HTML 再宽松匹配 <code>/我\s*是\s*1024\s*Builder/i</code></td></tr>
+        <tr><td>有效模板回复<br><span style="font-weight:700;color:#6C7A80">（严格字面口径 · 对照）</span></td><td><b>201 层</b></td><td>正文须含连续字面「我是1024Builder」（把主帖公告一并计入则为 202）</td></tr>
+        <tr><td>两种口径之差</td><td><b>12 层</b></td><td>楼号 66 / 94 / 113 / 114 / 129 / 134 / 160 / 244 / 294 / 313 / 336 / 358</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <b>同一个「顺延一楼」，两种口径落在不同楼层：</b>官方原文是「每个社区账号仅计 1 次有效参与；<b>重复回复、灌水或与活动无关的内容</b>不计入有效楼层」——排除的是<b>内容</b>，<b>不是排版格式</b>。所以本作品<b>主判定取宽松</b>（带空格但四行齐全的回帖不是灌水）：128 楼的奖顺延到 <b>129 楼「硬气一点」</b>。
+      若改用<b>严格字面口径</b>（正文必须含连续字面「我是1024Builder」），则 129 楼会被判无效，奖位会继续顺延到 <b>133 楼「琦哈哈」</b>。
+      <br>另一个容易踩的坑：Discourse 把话题标签渲染成 <code>&lt;span class="hashtag-raw"&gt;#我是&lt;/span&gt; 1024Builder#</code>，「我是」和「1024Builder」之间隔着一个 HTML 标签而非空白字符 —— 直接在原始 HTML 里做字符串匹配会漏判这 12 层，所以必须<b>先把 cooked 解码成纯文本再匹配</b>。
+    </div>
+  </section>
+
+      <div class="foot">
+    <b>1024 楼层实况墙 · Floor Wall</b> ｜ TRAE 社区 1024 狂欢周 · 玩法一盖楼数据看板<br>
+    数据全部来自公开接口 <b>forum.trae.cn/t/topic/325833.json</b>，可在社区自行核对；页面零外部依赖（无 CDN / 无外链字体 / 无外链图片）。
+  </div>
+</div>
+
+<!-- ======================= 同步最新楼层（模态） ======================= -->
+<div class="modal" id="syncModal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+    <div class="modal-head">
+      <h2 id="syncTitle">同步最新楼层 <span class="badge-sticker">Sync</span></h2>
+      <button class="btn sm" id="btnCloseSync">✕ 关闭</button>
+    </div>
+    <p class="desc">浏览器同源策略不让网页脚本直连 forum.trae.cn（该接口不返回 <code>Access-Control-Allow-Origin</code> 头），所以这一步必须你亲手做 —— 只要 3 步、10 秒，粘贴后所有视图（时间轴 / 里程碑 / 我的楼层 / 预测器）会立刻用上最新楼层。</p>
+    <div class="steps">
+      <div class="step">点「<b>打开 JSON 链接</b>」→ 浏览器会直接显示主帖的 JSON 文本（<code>forum.trae.cn/t/topic/325833.json</code>）。</div>
+      <div class="step">在那个页面按 <code>Ctrl+A</code> 全选 → <code>Ctrl+C</code> 复制。</div>
+      <div class="step">粘贴到下面文本框 → 点「<b>解析并载入</b>」。<b>可一次粘贴多个 JSON</b>（主帖 + 若干分页），解析器会逐个拆开并合并楼层。</div>
+    </div>
+    <div class="field">
+      <button class="btn" id="btnOpenJson">↗ 打开 JSON 链接</button>
+      <button class="btn" id="btnOpenJsonPage">↗ 打开分页 JSON 示例</button>
+      <button class="btn" id="btnClearInput">清空输入框</button>
+    </div>
+    <textarea class="ta" id="taJson" spellcheck="false" placeholder='把 JSON 粘贴到这里，例如：
+{"post_stream":{"stream":[502900,...],"posts":[{"post_number":1,"username":"...","created_at":"...","cooked":"..."}]},"highest_post_number":364,"posts_count":360,"participant_count":233,"last_posted_at":"2026-10-20T16:44:51.750Z"}'></textarea>
+    <div class="field" style="margin-top:10px;margin-bottom:0">
+      <button class="btn accent" id="btnParse">解析并载入</button>
+      <button class="btn" id="btnTryDirect">↻ 试试让页面直接抓取</button>
+    </div>
+    <div class="msg" id="importMsg"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ==========================================================================
+   0. 常量与内置基线快照
+   ========================================================================== */
+var TOPIC_ID   = '325833';
+var EP_TOPIC   = 'https://forum.trae.cn/t/topic/' + TOPIC_ID + '.json';
+var EP_PAGE    = function (n) { return 'https://forum.trae.cn/t/' + TOPIC_ID + '.json?page=' + n; };
+var EP_OVERRIDE = null;                        // 仅供自测：临时改写数据源（验证降级路径）
+function topicUrl() { return EP_OVERRIDE || EP_TOPIC; }
+/* 本地文件方式打开时，浏览器必定拦截对 forum.trae.cn 的跨域请求（实测无 ACAO 头），
+   自动抓取只会产生无意义的控制台告警，故 file:// 下默认跳过自动抓取，改走「手动导入」。 */
+var IS_FILE = (location.protocol === 'file:');
+var LS_KEY     = 'floorwall.snapshot.v1';
+var TARGET_MAX = 1024;
+var MILESTONES = [128, 256, 512, 1024];
+var REFRESH_MS = 60000;          // 自动刷新周期：60s
+var PAGE_SIZE  = 20;             // 论坛每页 20 层
+var SAMPLE_PAGES = 12;           // 均匀采样页数（B3 性能策略）
+/* 有效性判定 —— 两套口径，本作品两套都算、都展示。
+   主判定（宽松）：官方排除的是「重复回复、灌水或与活动无关的内容」，即内容而非排版格式，
+     所以「#我是 1024Builder#」这类带空白的写法（Discourse 会把话题标签包进
+     <span class="hashtag-raw">，导致「我是」与「1024Builder」之间隔着一个 HTML 标签）
+     必须先把 cooked 解码成纯文本，再做宽松匹配，否则会漏判 12 层。
+   对照口径（严格字面）：正文必须含连续字面「我是1024Builder」。 */
+var VALID_RE          = /我\s*是\s*1024\s*Builder/i;
+var VALID_MARK_STRICT = '我是1024Builder';
+/* 字体栈：只用系统本地字体，不外链任何字体文件 */
+var FONT = '"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+
+/* 内置基线快照：2026-10-21 00:44 CST 采样时的真实楼层元数据。
+   紧凑数组格式 [楼号, 时间戳ms, 是否有效模板回复(0/1), 用户名, 正文摘要] */
+var BASELINE = {"t":1792387683834,"l":1792514691750,"h":364,"p":233,"posts":[[1,1792387683834,0,0,"TRAE-小阳","1024， 属于开发者的节日。 过去一年，你或许熬夜修过一个没人看见的 Bug，或许"],[2,1792387721654,0,0,"TRAE-小阳",""],[3,1792387780863,0,0,"CC3","来了来了！"],[4,1792387786968,0,0,"斗战","沙发！ 水一水，1024"],[5,1792387801355,0,0,"汤圆","来啦来啦来啦！"],[6,1792387819658,0,0,"小敬","1111111来了"],[7,1792387821295,0,0,"姜金雷","感谢！！！"],[8,1792387885405,0,0,"用户18","今年线下有活动吗？我准备去吃茶歇"],[9,1792387959414,0,0,"TRAE_小飞","大家好快！"],[10,1792387971087,1,1,"HUNAU_徐智航","#我是1024Builder# 现在的我：学生、独立开发者（如学生、职场开发者、独立"],[11,1792388056601,1,1,"u938333563010697","#我是1024Builder# 现在的我：__灵活就业产品经理__ 自我介绍：__央"],[12,1792388057814,0,0,"用户18","你们说咱，现在能盖到多少楼？"],[13,1792388088655,0,0,"悬念","我去，阳姐震撼首发！"],[14,1792388131646,0,0,"小博同学","窝趣，牛牛牛！"],[15,1792388136252,1,1,"姜金雷","#我是1024Builder# 现在的我：职场开发者 自我介绍：深耕业务落地的职场开"],[16,1792388276443,0,0,"用户18","今年线下有没有活动啊？"],[17,1792388403042,1,1,"u3842161821620720","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[18,1792388421016,1,1,"汤圆","#我是1024Builder# 自我介绍：职场 + 独立双身份开发者，擅长把工程经验"],[19,1792388424024,0,0,"迟迟","哟吼吼~开干开干，TRAE官方对自己老用户就是大方"],[20,1792388488110,0,0,"琦哈哈","来了来了！"],[21,1792388596986,0,0,"u1669502651612842","builder们 盖起来"],[22,1792388598103,0,0,"MIK","把128楼预定给我"],[23,1792388601856,1,1,"斗战","#我是1024Builder# 现在的我：职场开发者 自我介绍：前端开发从业者，已经"],[24,1792388634296,0,0,"TRAE-小阳","有的，明天官号会专门发一篇社区活动头条 用户18: 今年线下有活动吗？我准备去吃茶歇"],[25,1792388683713,0,0,"小敬","这个我真在用"],[26,1792388686093,1,1,"小敬","#我是1024Builder# 现在的我：职场开发者（嵌入式全栈开发） 自我介绍：我"],[27,1792388687174,1,1,"taro","#我是1024Builder# 现在的我： 职场开发者 自我介绍： 23 岁，北京前"],[28,1792388754510,0,0,"MIK","这个活动有点意思哦"],[29,1792388801428,1,1,"u1775080201263104","#我是1024Builder# 现在的我：独立开发者 自我介绍：深耕业务落地的职场开"],[30,1792388804491,0,0,"AI发明家","前来盖楼！"],[31,1792388808752,0,0,"今天锻炼了吗","来了来了 冲冲冲！"],[32,1792388910663,1,1,"用户12385","#我是1024Builder# 现在的我：程序员（如学生、职场开发者、独立开发者、跨"],[33,1792388975777,0,0,"TSG666","有了AI，人人都可以过1024！"],[34,1792389037288,0,0,"黄小仙","（帖子已被作者删除）"],[35,1792389138813,0,0,"用户952777","现在的我：职场开发者（业余也算半个独立开发者） 自我介绍：白天写业务代码，晚上折腾自"],[36,1792389139493,1,1,"u1145005557430507","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[37,1792389139808,1,1,"白洛珩","#我是1024Builder# 现在的我：职场开发者（二次开发） 自我介绍：_目前在"],[38,1792389227597,0,0,"taro","补充一下github链接主页： taro-RY (taro) · GitHub Na"],[39,1792389385833,1,1,"maris","从【多重惊喜福利】 TRAE 社区 1024 狂欢周璀璨开启｜致敬真正的 AI En"],[40,1792389499401,1,1,"u2099416099198249","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[41,1792389752397,1,1,"HancksLiu","#我是1024Builder# 现在的我：AI产品 自我介绍：我是某知名半导体企业内"],[42,1792389757153,1,1,"u2486413017224684","#我是1024Builder# 现在的我 ：独立开发者 自我介绍 ：我是一名独立开发"],[43,1792389979193,1,1,"厉飞羽","#我是1024Builder# 现在的我：职场开发者 自我介绍：某 SaaS 公司的"],[44,1792390179026,1,1,"用户20227","#我是1024Builder# 现在的我：职场开发者 自我介绍：后端开发一枚，常年和"],[45,1792390181093,1,1,"琦哈哈","#我是1024Builder# 现在的我：职场开发者（前端出身，现在啥都干） 自我介"],[46,1792390311787,1,1,"BIA","#我是1024Builder# 现在的我：职场开发者 自我介绍：牛马 我和 TRAE"],[47,1792390315750,1,1,"kk-cola","#我是1024Builder# 现在的我：职场开发者 自我介绍：一个前端开发，顺便也"],[48,1792390427793,1,1,"今天锻炼了吗","#我是1024Builder# 现在的我：测试工程师 自我介绍：日常和用例、Bug "],[49,1792390611231,1,1,"u4140093848167107","斗战: #我是1024Builder#， 标题：【1024Builder作品秀】Bu"],[50,1792390923066,1,1,"puxiao","#我是1024Builder# 现在的我：职场开发者 自我介绍：离不开AI的废物 我"],[51,1792391004220,1,1,"Damond","#我是1024Builder# 现在的我：职场开发者 自我介绍：大家好，数据分析小能"],[52,1792391111566,1,1,"u4456768648541610","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[53,1792391111734,0,0,"Lukaka","1024 冲冲冲 这日子不得奖励一杯黑咖灰"],[54,1792391326903,1,1,"迟迟","#我是1024Builder# 现在的我： 职场开发者 自我介绍： 目前深耕医疗领域"],[55,1792391357917,0,0,"骆谦实","看到这里的小伙伴~不妨看看，社区推文已经发布！ https://mp.weixin."],[56,1792391398052,1,1,"大毛","#我是1024Builder# 我是独立开发者。 我平时喜欢AI Coding，喜欢"],[57,1792391541489,0,0,"YiFrank","水一个水一个~"],[58,1792391543382,1,1,"用户14404","#我是1024Builder# 现在的我：职场开发者 自我介绍：10年的“底层开发者"],[59,1792391693737,1,1,"oyz","#我是1024Builder# 现在的我：一名职场开发者。每天在需求、排期和改不完的"],[60,1792391694131,1,1,"昭昭是只开心喵","#我是1024Builder# 现在的我：职场开发者。白天做企业级前端项目，晚上折腾"],[61,1792392353419,0,0,"琦哈哈","盖楼盖起来盖起来"],[62,1792392815220,0,0,"Damond","迟迟: 小作品一： 【教师节VibeCoding】电脑桌面便利贴 - #7，来自 D"],[63,1792392938031,0,0,"u4003796207539283","现在的我 ：独立开发者 自我介绍 ：我是一个独立开发者，脑子里攒了不少\"想做但一直没"],[64,1792392955991,0,0,"u1294582583396538","1024 1024"],[65,1792392958048,1,1,"用户56021","#我是1024Builder# 现在的我：已经使用trae进行代码架构探索三四次了，"],[66,1792392959865,1,0,"Wayne","#我是 1024Builder# 现在的我：独立开发者 自我介绍：全栈开发，喜欢用 "],[67,1792393089638,1,1,"用户20289","#我是1024Builder# 现在的我：跨界创作者 自我介绍：设计师一枚，用tra"],[68,1792393284065,1,1,"u1466082959047369","#我是1024Builder# 现在的我：在读博士生，日常一半时间写代码，做实验，剩"],[69,1792393671203,1,1,"u942748402980519","#我是1024Builder# 现在的我：职场开发者 自我介绍：深耕业务落地的职场开"],[70,1792393814520,1,1,"u2785486628204730","#我是1024Builder# 现在的我：灵活软件开发 自我介绍： 我和 TRAE "],[71,1792393821689,1,1,"xwyxu","#我是1024Builder# 现在的我：理科学生 自我介绍：一个喜好vibecod"],[72,1792394436515,1,1,"zjz1","#我是1024Builder# 现在的我：学生 自我介绍：一个文科生，但是总是有各种"],[73,1792394726930,1,1,"u4118110104978995","#我是1024Builder# 现在的我：整车诊断方向的职场开发者 自我介绍：在台架"],[74,1792394797801,1,1,"u1651934565238915","#我是1024Builder# 现在的我：博士在读，研究方向是轨道车辆智能化 自我介"],[75,1792394798749,1,1,"u2521649857702665","#我是1024Builder# 现在的我：职场开发者 自我介绍：日常写业务代码的全栈"],[76,1792395001231,1,1,"骆谦实","#我是1024Builder# 现在的我：___it/ai专业在读研究生__ 自我介"],[77,1792395486216,1,1,"DuBaDu","#我是1024Builder# 现在的我：跨界创作者 自我介绍：我是芯片设计师，热爱"],[78,1792395891510,0,0,"u4140093848167107","增加UI界面显示： image1864×1546 298 KB"],[79,1792395995621,1,1,"茉卷","#我是1024Builder# 现在的我： 职场开发者 自我介绍： 大家好，我是茉卷"],[81,1792396303750,1,1,"u4035687989905483","#我是1024Builder# 现在的我： 用 AI 把日常小需求变成实用工具的个人"],[82,1792396399614,0,0,"AI发明家","盖满1024！"],[83,1792396488016,0,0,"浮世千寻沫","我来同你玩"],[84,1792396568239,0,0,"X-落榜美术生","1024，1024"],[85,1792396702875,1,1,"用户12308","#我是1024Builder# 现在的我：职场开发者 自我介绍：全栈智能体开发 我和"],[86,1792396765984,1,1,"用户18982","#我是1024Builder# 现在的我：职场开发者（AI 应用方向） 自我介绍：长"],[87,1792396879083,0,0,"u4449057856303452","1024，1024"],[88,1792396973504,1,1,"用户32724","#我是1024Builder# 现在的我：学生 · 软硬件之间横跳的跨界创作者 自我"],[89,1792397041091,1,1,"u2996604176982282","#我是1024Builder# 现在的我：产品经理 自我介绍：收集客户需求，分析客户"],[90,1792397196203,0,0,"不知火","盖楼盖楼哈哈"],[91,1792397198308,1,1,"用户3091","#我是1024Builder# 现在的我：独立开发者 自我介绍： 一名习惯把日常痛点"],[92,1792397299714,0,0,"u960296312913400","来来来，叠高高"],[93,1792397301695,1,1,"洋","#我是1024Builder# 现在的我：职场小产品一枚 自我介绍：乘风破浪会有时，"],[94,1792397449578,1,0,"AI落地人钧泽亮","我是 1024Builder# 现在的我：跨界独立开发者/FDE型OPC / 抖音电"],[95,1792397493614,1,1,"joyslove","#我是1024Builder# 现在身份:全栈开发牛马一枚 自我介绍:传统行业 ER"],[96,1792397520496,0,0,"用户59439","这不是我小时候为了玩FC游戏买的小霸王学习机么，原来丢在这了"],[97,1792397521104,1,1,"不知火","#我是1024Builder# 现在的我：大三学生 / 前端开发 / 业余独立开发者"],[98,1792397522628,1,1,"铁头钱","#我是1024Builder# 现在的我：职场开发者 自我介绍：一个爱好钓鱼的开发者"],[99,1792397633940,0,0,"AI落地人钧泽亮","牛啊，加油！"],[100,1792397704082,1,1,"u1360526943197177","#我是1024Builder# 现在的我： 嵌入式方向学习者 / 电子类专业学生 自"],[101,1792397903611,1,1,"秋米139","#我是1024Builder# 现在的我：视觉前端开发者 自我介绍：喜欢用 CSS "],[102,1792398217153,1,1,"崇明月下","#我是1024Builder# 现在的我：前端开发 自我介绍：热衷于研究大模型接口（"],[103,1792398217877,1,1,"xlly","#我是1024Builder# 现在的我：计算机相关专业在校学生，Vibe Codi"],[104,1792398271754,1,1,"u960296312913400","#我是1024Builder# 现在的我：牛马（职场）开发者+独立开发者 自我介绍："],[105,1792398392881,1,1,"大话数据分析","#我是1024Builder# 现在的我：职场开发者 自我介绍： 大家好，我是一名有"],[106,1792398725601,1,1,"u1171426900191868","#我是1024Builder# 现在的我：职场开发者 自我介绍：一名来自上位机转IT"],[107,1792399142874,1,1,"Aion","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[108,1792399204785,0,0,"罗浩","（帖子已被作者删除）"],[109,1792399458855,1,1,"CC3","#我是1024Builder# 现在的我：__待业的独立开发__ 自我介绍：__热衷"],[110,1792399802610,1,1,"cancanlala","#我是1024Builder# 现在的我：学生、独立开发者 自我介绍：我是一名刚刚毕"],[111,1792400023491,1,1,"u3506778249376091","#我是1024Builder# 现在的我：产品运营 自我介绍：ai探索新玩家 我和 "],[112,1792400139415,1,1,"鸿渐","#我是1024Builder# 现在的我：独立开发者 自我介绍： 我和 TRAE 一"],[113,1792400246988,1,0,"大话数据分析","#我是 1024Builder# 现在的我：职场开发者 自我介绍：7 年 + 经验数"],[114,1792400324518,1,0,"用户5249","#我是 1024Builder# 现在的我：职场游戏客户端开发者 自我介绍：日常高频"],[115,1792400351210,0,0,"TRAE-小阳","哎呀呀呀，快128楼了，第一个特殊楼层会是谁呢"],[116,1792400680887,0,0,"琦哈哈","快了快了 马上128楼了"],[117,1792400688748,1,1,"看哈苏","#我是1024Builder# 现在的我：独立开发者 自我介绍：做了个运动补给计算软"],[118,1792401105948,0,0,"用户18","128楼是什么？"],[119,1792401190471,1,1,"用户18","#我是1024Builder# 现在的我：我也不知道我属于啥 自我介绍： 我和 TR"],[120,1792401191946,0,0,"用户18","我感觉我要卡死了"],[121,1792401192066,0,0,"斗战","128楼，有奖品拿"],[122,1792401193369,0,0,"斗战","TRAE-小阳: 幸运Builder惊喜奖× 4：盖到128楼，256楼，512楼，"],[123,1792401193778,0,0,"用户18","我还蛮期待，这个楼能盖到1024楼的"],[124,1792401277840,0,0,"斗战","快拿奖品咯，我要来水一水看看我是几楼"],[125,1792401278156,0,0,"斗战","18哥，你好久不冒泡了，也不点赞"],[126,1792401284735,0,0,"用户18","image469×130 5.76 KB 我感觉trae，太牛x了"],[127,1792401341910,0,0,"用户18","拿什么奖品啊"],[128,1792401342701,0,0,"斗战","1024楼，那你要多水水才能到呢"],[129,1792401344162,1,0,"硬气一点","#我是 1024Builder# 现在的我：跨界创作者 自我介绍：大家好我是硬气一点"],[130,1792401344416,0,0,"用户18","TRAE-小阳: 盖到128楼，256楼，512楼，1024楼等四个指定特殊楼层的朋"],[131,1792401345982,0,0,"斗战","我要抢128楼"],[132,1792401411731,0,0,"用户18","斗战: 8哥，你好久不冒泡了，也不点赞 下个月开始点"],[133,1792401415436,1,1,"琦哈哈","#我是1024Builder# 现在的我：职场开发者（前端出身，现在啥都干） 自我介"],[134,1792401488473,1,0,"TRAE-小阳","硬气哥，128楼是你吗，硬气哥 硬气一点: #我是 1024Builder# 现在的"],[135,1792401542335,0,0,"斗战","@TRAE-小阳 我是不是抢到128了！！！！ image1702×526 79.3"],[136,1792401610398,0,0,"硬气一点","image781×1330 86.9 KB 不知道，18哥哥坏极了。TRAE的正确使"],[137,1792401613239,1,1,"pollllliiii","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我是一名除了上班就"],[138,1792401764617,0,0,"琦哈哈","你这样不行的 不符合要求"],[139,1792401766950,0,0,"用户18","随便，你们谁要都可以，我是氛围组，我无所谓，我只希望trae越来越好"],[140,1792401904878,0,0,"用户18","斗战: 我要来水一水看看我是几楼 水到1024楼"],[141,1792401905737,0,0,"斗战","要求是什么？不是只要盖楼就好了么"],[142,1792401985755,0,0,"琦哈哈","参与规则：每个社区账号仅计 1 次有效参与；重复回复、灌水或与活动无关的内容不计入有"],[143,1792402054495,0,0,"硬气一点","你确实是128，trae宝说我是129"],[144,1792402138129,0,0,"硬气一点","就不知道去重怎么算了，现在开始水楼"],[145,1792402207201,0,0,"大毛","大家都好优秀啊，来了好多人啊啊啊啊啊啊啊啊啊啊 image603×500 41.9 "],[146,1792402272641,0,0,"斗战","好像水贴不符合要求，顺延一层，那就你了"],[147,1792402274785,1,1,"u1606802328025868","#我是1024Builder# 现在的我：职场开发者，业余独立开发 自我介绍：白天上"],[148,1792402363780,1,1,"用户39048","#我是1024Builder# 现在的我：职场开发者，Java 后端，主业智慧门店巡"],[149,1792402414459,1,1,"u111485306549385","#我是1024Builder# 现在的我： 独立开发者 自我介绍：AI探索中——想用"],[150,1792402529585,0,0,"硬气一点","image1332×1000 127 KB"],[151,1792402603272,0,0,"用户18","硬气一点: 你确实是128，trae宝说我是129 第一个贴子算一楼"],[152,1792402603412,1,1,"熠熠生辉","#我是1024Builder# 现在的我：AI方向硕士生，跨界技术创作者 自我介绍："],[153,1792402900875,0,0,"4682B4","128 没了，大家伙儿 256 楼见"],[154,1792403335617,1,1,"u3076862849331972","#我是1024Builder# 现在的我：学生 自我介绍： 我和 TRAE 一起做成"],[155,1792403420922,1,1,"YUN33","#我是1024Builder# 现在的我：职场开发者 自我介绍：一名正在努力拥抱AI"],[156,1792403767417,0,0,"骆谦实","斗战哥，要按格式发才算，蹲256楼吧~"],[157,1792404989106,0,0,"斗战","image858×670 48.4 KB 那没机会了，我发过标准格式的了，再发那不就"],[158,1792405678669,0,0,"骆谦实","那就去玩玩法二吧！"],[159,1792406180135,1,1,"LINXX","#我是1024Builder# 现在的我：职场开发者 自我介绍：一个从研究生到工作与"],[160,1792406435418,1,0,"木芒果","#我是 1024Builder# 现在的我：全栈开发者 自我介绍：热爱探索 AI 原"],[161,1792406652879,0,0,"史窥","啦啦啦啦啦啦"],[162,1792407124084,1,1,"u807513709620476","#我是1024Builder# 现在的我：灵活就业者 ** 自我介绍：35+离职老登"],[163,1792407125197,0,0,"用户12543","#我的Builder高光时刻# 过去一年，我最想被记录的 Builder 高光时刻："],[164,1792407392853,1,1,"Merism","#我是1024Builder# 现在的我：我曾经是一名外卖员，现在我是一名骑手。 自"],[165,1792408221622,0,0,"TraeWork2026","现在的我：学生（计算机相关专业在读） 自我介绍： 热爱编程与折腾各类技术 demo，"],[166,1792408848614,1,1,"亿芭尔","#我是1024Builder# 现在的我：数据清洗工程师 自我介绍：经常帮实验室同学"],[167,1792410830037,1,1,"寄一安","#我是1024Builder# 现在的我：职场开发者（如学生、职场开发者、独立开发者"],[168,1792410832717,1,1,"枫玠","#我是1024Builder# 现在的我：独立开发者 自我介绍：我是一名游戏测试工程"],[169,1792411134217,0,0,"醒明AI研究院成员星图蓝恩希","我来啦，哈哈"],[170,1792411137871,0,0,"醒明AI研究院成员星图蓝恩希","为什么是1024这个数字"],[171,1792411336149,0,0,"醒明AI研究院成员星图蓝恩希","如果不想要奖品能折算成会员或积分吗"],[172,1792411339095,0,0,"醒明AI研究院成员星图蓝恩希","如果我时间不太够怎么办"],[173,1792411570679,1,1,"u3313289730476171","#我是1024Builder# 现在的我：学生 自我介绍：在职学生，学习数据分析学习"],[174,1792412202347,0,0,"用户18","Merism: 1111111208×935 107 KB 航空航天？"],[175,1792412202534,0,0,"用户18","醒明AI研究院成员星图蓝恩希: 1024这个数字 程序员的节日吧"],[176,1792413622308,1,1,"u2257766639221178","#我是1024Builder# 现在的我：独立开发者 自我介绍：网络运营从业者，对 "],[178,1792414280977,0,0,"TRAE-小阳","斗老师，不会让你输 斗战: image858×670 48.4 KB 那没机会了，我"],[179,1792414832698,1,1,"u942750585595932","#我是1024Builder# 现在的我：职场开发者 自我介绍：C++上位机开发 我"],[180,1792415466943,0,0,"用户18","斗战: 那没机会了，我发过标准格式的了，再发那不就是重复回复么，那也算无效回复。还是"],[181,1792415577508,0,0,"用户18","大家好，我是上单，我为trae发炎"],[182,1792415973803,1,1,"light_star","#我是1024Builder# 现在的我：计算机专业大四学生，一边做毕业设计，一边准"],[183,1792416035000,1,1,"u3330878314919577","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是国企工程师。已经"],[184,1792416294073,1,1,"基米哈","#我是1024Builder# 现在的我：初二学生 自我介绍：大家好，我是哈基宸，一"],[185,1792416648905,1,1,"不会写的Wang","#我是1024Builder# 现在的我：初二的一名学生 自我介绍：喜欢VibeCo"],[186,1792416725598,0,0,"MIK","无效楼层哈哈哈"],[187,1792416797103,1,1,"u3841027375148704","#我是1024Builder# 现在的我 ：跨界独立开发者，白天写代码，晚上用 AI"],[188,1792416920883,1,1,"谭谈","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[189,1792417474848,1,1,"Suggar-CEO兼程序员","#我是1024Builder# 现在的我：学生、OFSuggar公司CEO兼程序员 "],[190,1792418633609,1,1,"u1923486282681035","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[191,1792419358752,0,0,"迟迟","在等一个256"],[192,1792420328541,1,1,"小木","#我是1024Builder# 现在的我：独立开发者 自我介绍：我是一名独立开发者，"],[193,1792420942639,0,0,"sonxy","这个键盘好看"],[194,1792421802359,0,0,"Damond","哪个键盘？"],[195,1792421832171,0,0,"Damond","你猜会不会很多人都在等着，256，估计不想发"],[196,1792421875189,0,0,"Damond","让我来偷偷水几条，半夜三更，等人来发帖"],[197,1792421882924,1,1,"Jayce","#我是1024Builder# 现在的我： 制造业从业者 + AI跨界创作者。白天实"],[198,1792421939684,0,0,"sonxy","这个呀 image375×375 63 KB"],[199,1792422077573,0,0,"Damond","sonxy: 这个呀 价值很高！！白色很好！我手上刚好有白色"],[200,1792422106110,0,0,"sonxy","水也没用"],[201,1792422153294,0,0,"Damond","没事没事~~水上去！！！让他们冲刺！"],[202,1792422739276,1,1,"u1219791615172683","#我是1024Builder# 现在的我：职场开发者 自我介绍：白天写业务，晚上总想"],[203,1792423735804,0,0,"小木","我也水水，发就完了，朋友们"],[204,1792423736898,1,1,"u590875236767616","#我是1024Builder# 现在的我：__职场开发者。 自我介绍：__我是Sun"],[205,1792424465195,1,1,"0mecihuatl","#我是1024Builder# 现在的我：学生，独立开发者、咸鱼梦想家 自我介绍：我"],[207,1792426284089,1,1,"小石头","#我是1024Builder# 现在的我：独立开发者 自我介绍：现在的我为一名交通运"],[208,1792432729663,0,0,"u3076903116484115","参加活动 冲"],[209,1792432848028,1,1,"u3076903116484115","#我是1024Builder# 现在的我： 游戏行业从业者 / 3D 动作设计师 /"],[210,1792434339904,1,1,"yikuaibanz","#我是1024Builder# 现在的我: 学生开发者 自我介绍: 一名还在校园里的"],[211,1792442242929,1,1,"鱼儿","#我是1024Builder# 现在的我：独立开发者 自我介绍：目前在使用 Agen"],[212,1792454782402,1,1,"u3604651566699008","#我是1024Builder# 现在的我：跨界创作者 自我介绍：悟思品，将想法通过V"],[213,1792456090999,1,1,"用户21477","#我是1024Builder# 现在的我：学生（计算机专业） 自我介绍：一枚还在边学"],[214,1792457256434,1,1,"真沒話講","#我是1024Builder# 现在的我： 一名总被\"东西放哪儿了\"困扰的学生，也是"],[215,1792457573947,1,1,"刹那抓住未来","#我是1024Builder# 现在的我：从事工业嵌入式的毕业生 自我介绍：双非小牛"],[216,1792457952964,1,1,"u2464485569469434","#我是1024Builder# 现在的我：电力行业 自我介绍：单纯业余爱。 我和 T"],[217,1792458317123,1,1,"用户193","#我是1024Builder# 现在的我：职场开发者（Java 后端 / 监控系统方"],[218,1792458404436,1,1,"高山景行","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是一个后端开发工程"],[219,1792458465919,1,1,"u58721521898009","#我是1024Builder# 现在的我：PCB 设计工程师 / 跨界开发者（Cad"],[220,1792458747398,1,1,"壳壳","#我是1024Builder# 现在的我：跨界开发者 自我介绍：白天写方案、晚上写代"],[221,1792458748694,1,1,"u168645129150872","#我是1024Builder# 现在的我：初中信息科技老师 自我介绍：作为一名电子工"],[222,1792459208716,1,1,"你好9527","#我是1024Builder# 现在的我： 职场全栈开发工程师 自我介绍： 前端 V"],[223,1792459273092,1,1,"张云","#我是1024Builder# 现在的我：职场开发者 / 独立开发者（根据你的实际身"],[224,1792459448695,1,1,"u3476031215795433","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[225,1792459448920,1,1,"罗浩","#我是1024Builder# 现在的我 ：跨界创作者（企业管理层） 自我介绍 ：我"],[226,1792459534811,0,0,"程序员-titi","（帖子已被作者删除）"],[227,1792459875259,1,1,"程序员-titi","#我是1024Builder# 现在的我：学生、独立开发者 自我介绍：专注前端轻量化"],[228,1792460949697,1,1,"u2619502375745012","我是1024Builder# 现在的我：职场客户端开发 自我介绍：白天写业务，晚上想"],[229,1792461326482,0,0,"trae.美好","哇塞，这次的礼品，太太太太太有诱惑力了！！！！"],[230,1792461444069,1,1,"suph","TRAE-小阳: #我是1024Builder# 现在的我：______（如学生、职"],[231,1792461701073,1,1,"关天","#我是1024Builder# 现在的我：职场开发者和项目经理 自我介绍：我是一名职"],[232,1792461802744,0,0,"u274203564586320","来了，trea trea"],[233,1792461886989,1,1,"檀小染","#我是1024Builder# 现在的我：数字媒体技术专业学生 自我介绍：正在做非遗"],[234,1792461988680,1,1,"xcsweb","#我是1024Builder# 现在的我：前端开发者 自我介绍：我是 xcsweb，"],[235,1792462063844,1,1,"哞哞哞","#我是1024Builder# 现在的我： 上班族 自我介绍： 一个喜欢在生活里找痛"],[236,1792462066752,1,1,"猫条七","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是一名Trae资深"],[237,1792462130732,1,1,"只因还在努力","#我是1024Builder# 现在的我：独立开发者 自我介绍：一个有很多想法的人吧"],[238,1792462234416,0,0,"用户18","TRAE-小阳: 有的，明天官号会专门发一篇社区活动头条 已报名，等着审核"],[239,1792462801253,0,0,"用户18","都等着楼？何必呢，该评论评论，该发就发"],[240,1792463048431,1,1,"u1300061476103850","#我是1024Builder# 现在的我：职场开发者。 自我介绍：10 年 Java"],[241,1792463193628,0,0,"用户18","u1300061476103850: 01-big-screen1920×1080 "],[242,1792463197218,0,0,"用户18","只因还在努力: image1920×1154 370 KB 湖北备案的？"],[243,1792463275082,0,0,"用户18","猫条七: ScreenShot_2026-10-19_134949_2511920×"],[244,1792463286623,1,0,"TSG666","#我是 1024Builder# 现在的我：自动驾驶行业产品经理 自我介绍：深耕自动"],[245,1792464015703,0,0,"猫条七","是的你没看错，你可以体验一下： 宇宙级借口生成器"],[246,1792464046762,0,0,"独家的记忆","太棒了，每天都在用trae"],[247,1792464451522,1,1,"3个_Agenter","#我是1024Builder# 现在的我 ：视觉和机器学习算法工程师 自我介绍 ：深"],[248,1792464697066,1,1,"u2187347294437241","#我是1024Builder# 现在的我：职场开发者 自我介绍：老码农 我和 TRA"],[249,1792464880860,1,1,"独家的记忆","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是一名芯片嵌入式软"],[250,1792465073034,1,1,"donkeyAn","#我是1024Builder# 现在的我：独立开发者 自我介绍：深耕业务落地的职场开"],[251,1792465428534,1,1,"u209323670117514","#我是1024Builder# 现在的我：软件工程师 自我介绍：前端转型上位机 我和"],[252,1792465553254,1,1,"yzyy","#我是1024Builder# 现在的我：职场开发者 自我介绍：现在是新手ui设计，"],[253,1792465720798,0,0,"MIK","紧张刺激的环节到了"],[254,1792465766521,1,1,"MIK","#我是1024Builder# 现在的我：企业员工，平时做印刷排版行业的 Windo"],[255,1792465774876,1,1,"SuS","#我是1024Builder# 现在的我：独立开发者 / 学生 / 某贴吧吧主 / "],[256,1792465777067,1,1,"鱼香肉丝没鱼老婆饼里没老婆夫妻肺片没夫妻","#我是1024Builder# 现在的我：自媒体直播间管理员，一个人管三台设备的人 "],[257,1792465779619,1,1,"FFFFu","#我是1024Builder# 现在的我：某游戏的第三方Mod作者 自我介绍：我做我"],[258,1792465792147,1,1,"网安公司售前售后都是带嘴不带脑的懒蠢人","#我是1024Builder# 现在的我：职场开发者（Java 后端，被迫营业 .N"],[259,1792465794787,1,1,"鲁班大人","#我是1024Builder# 现在的我 ：独立开发者，A 股短线交易者，白天盯盘，"],[260,1792465797516,0,0,"SuS","我已经尽全力了… image429×284 13.8 KB"],[261,1792465798075,1,1,"琦哈哈","#我是1024Builder# 现在的我：职场开发者（前端出身，现在什么都要做） 自"],[262,1792465800569,0,0,"Doro","（帖子已被作者删除）"],[263,1792465800707,0,0,"MIK","哈哈哈哈我来捣乱了"],[264,1792465801736,0,0,"Doro","（帖子已被作者删除）"],[265,1792465802495,0,0,"Doro","（帖子已被作者删除）"],[266,1792465802690,0,0,"Doro","（帖子已被作者删除）"],[267,1792465803351,0,0,"Doro","（帖子已被作者删除）"],[268,1792465803802,1,1,"琦哈哈","#我是1024Builder# 现在的我：职场开发者（前端出身，现在啥都干） 自我介"],[269,1792465804082,0,0,"网安公司售前售后都是带嘴不带脑的懒蠢人","（帖子已被作者删除）"],[270,1792465960343,1,1,"Jimmy27","#我是1024Builder# 现在的我：AI各种辅助工作 自我介绍：60%项目管理"],[271,1792465966807,1,1,"瑞伊zz","#我是1024Builder# 现在的我：独立开发者 自我介绍：热衷于 AI Cod"],[272,1792466132413,1,1,"SuS","https://forum.trae.cn/t/topic/325833/255?u"],[273,1792466204706,0,0,"SuS","太可怕了，瞬间多10条，提前量预留太多了…还是抢不过"],[274,1792466206594,0,0,"Doro","感觉盖特殊楼太难了 ，还是参加活动二吧"],[275,1792466386067,0,0,"网安公司售前售后都是带嘴不带脑的懒蠢人","image1049×640 115 KB 好像是狙击成功了？希望活动1我能获得麦克风"],[276,1792466491598,1,1,"SuS","【多重惊喜福利】 TRAE 社区 1024 狂欢周璀璨开启｜致敬真正的 AI Eng"],[277,1792466568564,0,0,"SuS","错过了就帮你们水水贴吧，记得给我点赞"],[278,1792466572675,0,0,"SuS","噢对了，最新贴的楼层似乎和右侧滑块的楼层不一样，似乎是有个楼层被完全删除了（不是已编"],[279,1792466643740,1,1,"u4047751940680464","#我是1024Builder# 现在的我：跨界创作者 自我介绍： 我和 TRAE 一"],[280,1792466861950,0,0,"TRAE-小阳","这是高手 SuS: 我已经尽全力了… image429×284 13.8 KB"],[281,1792466999724,0,0,"SuS","呜呜呜我哄不好了，除非给我发积分"],[282,1792467104103,1,1,"GrassWonder","#我是1024Builder# 现在的我：研究生以及独立开发者 自我介绍：本职是做化"],[283,1792467427697,0,0,"只因还在努力","（帖子已被作者删除）"],[284,1792467493350,1,1,"ytxah","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是一名职场开发者，"],[285,1792467653808,1,1,"熊猫钓鱼","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是一名深耕效率工具"],[286,1792467815851,1,1,"Erics","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[287,1792467877550,1,1,"Doro","#我是1024Builder# 现在的我：在校学生 自我介绍：业余时间做 AI 推理"],[288,1792467948356,1,1,"永恒","#我是1024Builder# 现在的我：职场开发者、独立开发者 自我介绍：职场 +"],[289,1792467948501,1,1,"u4285238978559131","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[290,1792468039220,0,0,"trae.美好","TRAE-小阳: 1024， 属于开发者的节日。 这个不错，功能易用，界面爽朗"],[291,1792468130887,1,1,"u86225801194809","#我是1024Builder# 现在的我：嵌入式开发者一枚 自我介绍：高强度使用AI"],[292,1792468194336,1,1,"sin","#我是1024Builder# 现在的我：学生 自我介绍：河南大学2027届毕业生 "],[293,1792468266433,1,1,"凪音澪","#我是1024Builder# 现在的我：职场开发者、独立游戏开发者 自我介绍：白天"],[294,1792468267345,1,0,"u1300041347119268","#我是 1024Builder# 现在的我：职场开发者 自我介绍：长期深耕应用开发，"],[295,1792468376162,1,1,"柏舟","#我是1024Builder# 现在的我：职场开发者（券商数字化转型方向），日常在做"],[296,1792468510696,1,1,"Jackie_tan","#我是1024Builder# 现在的我：大学生 自我介绍：我是Jackie，热爱V"],[297,1792468823499,1,1,"用户1933","#我是1024Builder# 现在的我 ：流程制造业企业信息化工程师，日常和设备管"],[298,1792468905679,1,1,"u3590345987994999","#我是1024Builder# 现在的我：学生、独立开发者、跨界创作者 自我介绍： "],[299,1792469055919,1,1,"张三疯","#我是1024Builder# 现在的我：职场开发者 自我介绍：我是大美西域的本地 "],[300,1792469132755,1,1,"trae.美好","#我是1024Builder# 现在的我 ：职场开发者,也是这波编程范式迁移的现场见"],[301,1792469228758,1,1,"u3102135822060039","#我是1024Builder# 现在的我：职场开发者 自我介绍：白天写代码、晚上折腾"],[302,1792469459868,0,0,"琦哈哈","（帖子已被作者删除）"],[303,1792472027281,1,1,"u142255570813968","#我是1024Builder# 现在的我：一名初中生 自我介绍：我是我妈说网名别太长"],[304,1792472138214,1,1,"泽神传说","#我是1024Builder# 现在的我：学生 自我介绍：我是一名人工智能专业的学生"],[305,1792473261524,1,1,"u3511219293797184","#我是1024Builder# 现在的我：学生 自我介绍：计算机专业在读学生。我每天"],[306,1792473922178,0,0,"猫条七","我开发了两个作品，大家可以体验一下： 1.宇宙无敌借口生成器,自动生成各种各种的奇葩"],[307,1792474191856,0,0,"CC3","我去快600楼了，看错了看错了"],[308,1792474289074,0,0,"今天锻炼了吗","每天盖一层"],[309,1792475003125,1,1,"我勒个去","#我是1024Builder# 现在的我：职场前端开发者，日常和企业级系统打交道 自"],[310,1792475095432,1,1,"u3546397676932848","#我是1024Builder# 现在的我：学生 自我介绍： 我和 TRAE 一起做成"],[311,1792475098744,1,1,"我勒个去","#我是1024Builder# 现在的我：职场前端开发者，日常和企业级系统打交道 自"],[312,1792477067747,0,0,"HancksLiu","已经300+楼了，来自40f的仰望"],[313,1792477607353,1,0,"u3235231238985274","#我是1024BuiLder# 现在的我：职场开发者 自我介绍：一个职场开发者，跟着"],[314,1792477671613,1,1,"用户10941","#我是1024Builder# 现在的我：独立开发者，一个人做小游戏。白天接活，晚上"],[315,1792477881225,1,1,"dong","从【多重惊喜福利】 TRAE 社区 1024 狂欢周璀璨开启｜致敬真正的 AI En"],[316,1792477956683,1,1,"浪里青松","#我是1024Builder# 现在的我：职场开发者 自我介绍：曾经是前端艺术家，现"],[317,1792477958097,1,1,"唯有美食方解忧愁","#我是1024Builder# 现在的我：计算机专业大三学生 自我介绍：理论知识学了"],[318,1792478023964,1,1,"阿凯番茄炒蛋","#我是1024Builder# 现在的我：初创团队的创始人兼全栈开发 自我介绍：团队"],[319,1792478144680,1,1,"u3823422168370971","#我是1024Builder# 现在的我： 学生、独立创作者、独立开发者 自我介绍："],[320,1792478146010,1,1,"呼啦啦1819","#我是1024Builder# 现在的我：35岁跨界新农人/开发者 自我介绍：在传统"],[321,1792478696954,0,0,"小木","继续盖大楼，冲冲512朋友们"],[322,1792478769845,1,1,"4682B4","#我是1024Builder# 现在的我：在职 + 业余开发者 自我介绍：大家好，我"],[323,1792479405165,1,1,"u3375951059892640","从【多重惊喜福利】 TRAE 社区 1024 狂欢周璀璨开启｜致敬真正的 AI En"],[324,1792479851293,1,1,"u590853823015488","#我是1024Builder# 现在的我：职场开发者（业余也在做独立开发） 自我介绍"],[325,1792479995270,0,0,"kevin-sz","（帖子已被作者删除）"],[326,1792479998634,1,1,"u3770691442458185","#我是1024Builder# 现在的我：职场开发者 自我介绍：牛马一枚，在自己的行"],[327,1792480023744,1,1,"kevin-sz","#我是1024Builder# 现在的我：独立开发者 自我介绍：用AI创造价值 我和"],[328,1792480469043,1,1,"u807458798575676","#我是1024Builder# 现在的我：职场开发者 自我介绍：工作近10年的老人了"],[329,1792480562944,1,1,"黄小仙","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我是消费品行业市场"],[330,1792481526531,1,1,"忠言","#我是1024Builder# 现在的我：职场开发者 自我介绍： 一名北漂十三年的大"],[331,1792483334720,1,1,"GeneralC","#我是1024Builder# 现在的我：Harness开发者，游戏制作人 自我介绍"],[332,1792484065629,1,1,"用户2643","#我是1024Builder# 现在的我：职场开发者 + 跨界创作者（网络基础设施与"],[333,1792484579023,0,0,"u1391296859617680","来了来了！"],[334,1792487046163,1,1,"七七澄","#我是1024Builder# 现在的我： 职场开发者，也是一个喜欢动手做工具的独立"],[335,1792488234049,1,1,"aswqazx","#我是1024Builder# 现在的我： 独立开发者，白天写业务代码，晚上折腾自己"],[336,1792488377876,1,0,"u1043851743073984","#我是 1024Builder# 现在的我：职场开发者 自我介绍：深耕后端与大数据方"],[337,1792490340068,1,1,"赴月","#我是1024Builder# 现在的我： 服装设计师 / 跨界创作者 自我介绍： "],[338,1792490483562,0,0,"二进制的今","先盖楼！冲1024"],[339,1792491116103,1,1,"钟的向方反","#我是1024Builder# 现在的我：职场开发者 自我介绍： 我和 TRAE 一"],[340,1792492554861,1,1,"u3678333435393163","#我是1024Builder# 现在的我 ：独立开发者 / 跨界创作者 自我介绍 ："],[341,1792492556509,1,1,"humanfireworks","#我是1024Builder# 现在的我：在校学生 自我介绍：大家好，我是一名学生开"],[342,1792493491394,0,0,"用户61659","我是校园云 SaaS 的创业者，做的是面向高校市场的多租户校园生活服务平台，把商城交"],[343,1792495619910,1,1,"u1910302429678716","#我是1024Builder# 现在的我：不是学生，也不是程序员，就是对编程世界感兴"],[344,1792496069147,0,0,"神的孩子都在跳舞","来了 gogogo"],[345,1792496242142,0,0,"骆谦实","要按规则发布哦！"],[346,1792496268531,0,0,"骆谦实","还有512楼和1024楼！家人们冲冲冲哇！"],[347,1792496374855,0,0,"骆谦实","除了特定楼层之外，还有！ 精选 Builder 故事 × 50：我们会选出 50 条"],[348,1792496749009,1,1,"大模型善后工程师-K叔","#我是1024Builder# 现在的我：开发工程师 自我介绍：资深开发工程师，在领"],[349,1792498129460,0,0,"u3446333692460924","1024加油"],[350,1792498129616,1,1,"u3682690187673824","#我是1024Builder# 现在的我：__学生__（如学生、职场开发者、独立开发"],[351,1792502621508,1,1,"Jet","#我是1024Builder# 现在的我： 一名学生，也是一名边学边做的 Build"],[352,1792503595020,1,1,"用户14583","TRAE-小阳: #我是1024Builder# 现在的我：_公司AI领导者____"],[353,1792504593152,1,1,"u23514859976596","#我是1024Builder# 现在的我：买方量化研究员 / 数据工程师（独立开发者"],[354,1792504672740,1,1,"u2781080573191529","#我是1024Builder# 现在的我：AI小白 自我介绍：脑子里装满了动画脑洞，"],[355,1792506831211,0,0,"一墨","现在的我：一个快被产值逼疯的工程人 自我介绍：我叫一墨，我晚上一个工程行业的人 我以"],[356,1792507359552,0,0,"吴小锤","现在的我 ：职场开发者，白天写需求，晚上写自己的需求。业余时间的全部乐趣，就是看一个"],[357,1792507505606,1,1,"智云说AI","#我是1024Builder# 现在的我：跨界创作者（数字产品工作室AI执行长） 自"],[358,1792510570491,1,0,"xdjiang53","#我是 1024Builder# 现在的我： 软件专业大二学生 自我介绍： 一个正在"],[359,1792512753607,1,1,"u3102147971922452","TRAE-小阳: #我是1024Builder# 现在的我：_学生_____（如学生"],[360,1792512843611,0,0,"u3102147971922452","从【多重惊喜福利】 TRAE 社区 1024 狂欢周璀璨开启｜致敬真正的 AI En"],[361,1792513537168,0,0,"Damond","我今天来报道，顺便盖盖楼~~！"],[362,1792513590277,0,0,"Damond","方便帮我看看，我现在是哪一层楼吗？"],[363,1792514196550,1,1,"u4474346028141228","#我是1024Builder# 现在的我：职场开发者，业余时间做点自己真的会用的小工"],[364,1792514691750,0,0,"硬气一点","加盖一层小洋房"]]};
+
+/* ==========================================================================
+   1. 全局状态
+   ========================================================================== */
+var ST = {
+  posts: new Map(),        // 楼号 -> {n, ms, valid, near, user, excerpt}
+  meta: { highest: 0, participants: 0, lastPostedAt: 0, topicCreatedAt: 0, postsCount: 0 },
+  source: 'baseline',      // baseline | live | manual
+  sourceLabel: '',
+  error: null,
+  lastAttempt: 0,
+  myName: '',
+  mySet: new Set(),
+  selected: null,
+  focusFloor: null,
+  fit: 'reached',          // reached | all
+  autoTimer: null,
+  autoPaused: false,       // 熔断标志：跨域受限后暂停 60s 自动轮询
+  inFlight: false,
+  pts: []                  // 时间轴命中测试用的点位缓存
+};
+
+/* ==========================================================================
+   2. 工具函数
+   ========================================================================== */
+function $(id) { return document.getElementById(id); }
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function fmtDate(ms) {
+  var d = new Date(ms);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+function fmtTime(ms) {
+  var d = new Date(ms);
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function fmtDT(ms) { return fmtDate(ms) + ' ' + fmtTime(ms); }
+function fmtShort(ms) {
+  var d = new Date(ms);
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function fmtDelta(ms) {
+  var diff = Date.now() - ms;
+  if (diff < 0) return '即将';
+  var m = Math.floor(diff / 60000);
+  if (m < 1) return '刚刚';
+  if (m < 60) return m + ' 分钟前';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' 小时前';
+  return Math.floor(h / 24) + ' 天前';
+}
+/** 距离未来的中文时长 */
+function fmtLead(ms) {
+  var diff = ms - Date.now();
+  if (diff <= 0) return '已达成';
+  var h = diff / 3600000;
+  if (h < 1) return Math.max(1, Math.round(diff / 60000)) + ' 分钟后';
+  if (h < 48) return h.toFixed(1) + ' 小时后';
+  return (h / 24).toFixed(1) + ' 天后';
+}
+
+/** 去掉 HTML 标签，得到纯文本摘要 */
+function stripHTML(html) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote|tr)>/gi, ' ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&hellip;/g, '…')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** 有效性判定：valid = 宽松口径（主判定）；strict = 严格字面口径（对照） */
+function judgeValid(cooked, postNumber) {
+  if (postNumber === 1) return { valid: false, strict: false };   // 主帖是活动公告，不计入回帖楼层
+  var text = stripHTML(cooked);
+  return {
+    valid: VALID_RE.test(text),
+    strict: text.indexOf(VALID_MARK_STRICT) >= 0
+  };
+}
+
+/** 归一化论坛 post 对象 → 内部楼层记录 */
+function normalizePost(p) {
+  var j = judgeValid(p.cooked, p.post_number);
+  var ms = Date.parse(p.created_at);
+  if (!isFinite(ms)) ms = Date.now();
+  return {
+    n: p.post_number,
+    ms: ms,
+    valid: j.valid,
+    strict: j.strict,
+    user: p.username || p.display_username || p.name || '匿名',
+    excerpt: stripHTML(p.cooked).slice(0, 160)
+  };
+}
+
+/** 把基线快照（紧凑数组）灌入状态 */
+function loadBaseline() {
+  if (!BASELINE) return;
+  ST.posts.clear();
+  for (var i = 0; i < BASELINE.posts.length; i++) {
+    var r = BASELINE.posts[i];
+    ST.posts.set(r[0], { n: r[0], ms: r[1], valid: !!r[2], strict: !!r[3], user: r[4] || '匿名', excerpt: r[5] || '' });
+  }
+  ST.meta = {
+    highest: BASELINE.h,
+    participants: BASELINE.p,
+    lastPostedAt: BASELINE.l,
+    topicCreatedAt: BASELINE.t,
+    postsCount: ST.posts.size - 1
+  };
+  ST.source = 'baseline';
+  ST.sourceLabel = '内置真实快照';
+}
+
+/* ==========================================================================
+   3. 本地快照缓存（localStorage）
+   ========================================================================== */
+function saveSnapshot() {
+  try {
+    var payload = {
+      savedAt: Date.now(),
+      meta: ST.meta,
+      posts: []
+    };
+    ST.posts.forEach(function (p) {
+      payload.posts.push([p.n, p.ms, p.valid ? 1 : 0, p.strict ? 1 : 0, p.user, p.excerpt]);
+    });
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+function loadSnapshot() {
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    var data = JSON.parse(raw);
+    if (!data || !data.posts || !data.posts.length) return false;
+    // 只有比内置快照更新/更完整时才覆盖
+    if (data.savedAt < (BASELINE ? BASELINE.l : 0)) return false;
+    ST.posts.clear();
+    for (var i = 0; i < data.posts.length; i++) {
+      var r = data.posts[i];
+      ST.posts.set(r[0], {
+        n: r[0], ms: r[1], valid: !!r[2], strict: !!r[3],
+        user: r[4] || '匿名', excerpt: r[5] || ''
+      });
+    }
+    if (data.meta) {
+      ST.meta = {
+        highest: data.meta.highest || 0,
+        participants: data.meta.participants || 0,
+        lastPostedAt: data.meta.lastPostedAt || 0,
+        topicCreatedAt: data.meta.topicCreatedAt || 0,
+        postsCount: data.meta.postsCount || 0
+      };
+    }
+    ST.source = 'manual';
+    ST.sourceLabel = '已同步快照';
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+function clearSnapshot() {
+  try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ==========================================================================
+   4. 网络层
+   ========================================================================== */
+function fetchJSON(url, timeoutMs) {
+  var ctl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctl) ctl.abort(); }, timeoutMs || 20000);
+  var opt = { method: 'GET', headers: { 'Accept': 'application/json' }, credentials: 'omit', mode: 'cors', cache: 'no-store' };
+  if (ctl) opt.signal = ctl.signal;
+  return fetch(url, opt).then(function (res) {
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }, function (err) {
+    clearTimeout(timer);
+    throw err;
+  });
+}
+
+/** 从 forum 主帖 JSON 中提取元信息 */
+function applyTopicMeta(data) {
+  if (!data) return;
+  if (typeof data.highest_post_number === 'number') ST.meta.highest = data.highest_post_number;
+  if (typeof data.participant_count === 'number') ST.meta.participants = data.participant_count;
+  if (typeof data.posts_count === 'number') ST.meta.postsCount = data.posts_count;
+  if (data.last_posted_at) {
+    var t = Date.parse(data.last_posted_at);
+    if (isFinite(t)) ST.meta.lastPostedAt = t;
+  }
+  if (data.created_at) {
+    var c = Date.parse(data.created_at);
+    if (isFinite(c)) ST.meta.topicCreatedAt = c;
+  }
+}
+
+/** 从任意形状的 JSON 中提取 post 数组 */
+function extractPosts(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) {
+    return data.filter(function (p) { return p && typeof p.post_number === 'number'; });
+  }
+  if (data.post_stream && Array.isArray(data.post_stream.posts)) return data.post_stream.posts;
+  if (Array.isArray(data.posts)) return data.posts;
+  return [];
+}
+
+/** 合并楼层到全局状态（按楼号去重，保留信息更全的一条） */
+function mergePosts(posts) {
+  var added = 0, updated = 0;
+  for (var i = 0; i < posts.length; i++) {
+    var rec = normalizePost(posts[i]);
+    if (!isFinite(rec.n)) continue;
+    var old = ST.posts.get(rec.n);
+    if (!old) { ST.posts.set(rec.n, rec); added++; }
+    else {
+      var better = (rec.excerpt && rec.excerpt.length > old.excerpt.length) || (!old.excerpt && rec.excerpt);
+      if (better) {
+        ST.posts.set(rec.n, { n: rec.n, ms: rec.ms || old.ms, valid: rec.valid || old.valid,
+                              strict: rec.strict || old.strict, user: rec.user || old.user,
+                              excerpt: rec.excerpt || old.excerpt });
+      }
+      updated++;
+    }
+  }
+  // 楼号上限以实际数据为准
+  var mx = 0;
+  ST.posts.forEach(function (p) { if (p.n > mx) mx = p.n; });
+  if (mx > ST.meta.highest) ST.meta.highest = mx;
+  return { added: added, updated: updated };
+}
+
+/**
+ * B3 性能策略：楼层明细懒加载 + 采样
+ * - 均匀抽取约 12 页覆盖时间轴
+ * - 128/256/512/1024 及 1024 附近楼层精确拉取（不采样）
+ */
+function computeSamplePages() {
+  var total = Math.ceil((ST.meta.highest || 1) / PAGE_SIZE);
+  var set = {};
+  if (total <= SAMPLE_PAGES) {
+    for (var i = 1; i <= total; i++) set[i] = 1;
+  } else {
+    for (var s = 0; s < SAMPLE_PAGES; s++) {
+      var p = 1 + Math.round(s * (total - 1) / (SAMPLE_PAGES - 1));
+      set[p] = 1;
+    }
+  }
+  // 里程碑楼层及 1024 附近：精确页
+  var exact = MILESTONES.slice();
+  for (var m = 0; m < exact.length; m++) {
+    set[Math.max(1, Math.ceil(exact[m] / PAGE_SIZE))] = 1;
+    set[Math.max(1, Math.ceil((exact[m] + 1) / PAGE_SIZE))] = 1;
+  }
+  // 1024 附近（±10 层）
+  for (var n = TARGET_MAX - 10; n <= TARGET_MAX + 2; n++) {
+    if (n > 0) set[Math.max(1, Math.ceil(n / PAGE_SIZE))] = 1;
+  }
+  return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+}
+
+/** 后台采样加载（不阻塞渲染） */
+function loadSampledPages() {
+  if (ST.source !== 'live') return;
+  var pages = computeSamplePages();
+  var i = 0;
+  function step() {
+    if (i >= pages.length) return;
+    var p = pages[i++];
+    fetchJSON(EP_PAGE(p), 15000).then(function (data) {
+      var ps = extractPosts(data);
+      if (ps.length) {
+        mergePosts(ps);
+        renderAll();
+      }
+      setTimeout(step, 700);   // 轻微限速，避免触发论坛 503
+    }).catch(function () {
+      setTimeout(step, 1500);
+    });
+  }
+  setTimeout(step, 900);
+}
+
+/* ==========================================================================
+   5. 渲染：KPI
+   ========================================================================== */
+function renderKPI() {
+  var posts = ST.posts;
+  var highest = ST.meta.highest || 0;
+  var realMax = 0, realCount = 0;
+  posts.forEach(function (p) { realCount++; if (p.n > realMax) realMax = p.n; });
+  var floorNo = Math.max(highest, realMax);
+
+  $('kpiFloor').textContent = floorNo;
+  $('kpiFloorSub').textContent = realCount > 0
+    ? ('实际 ' + realCount + ' 层' + (floorNo > realCount ? '（' + (floorNo - realCount) + ' 层已删帖跳号）' : ''))
+    : '最高楼号';
+
+  var gap = Math.max(0, TARGET_MAX - floorNo);
+  $('kpiGap').textContent = gap;
+  $('kpiGapSub').textContent = gap > 0 ? '楼 · 继续盖楼' : '已达成 🎉';
+
+  $('kpiPeople').textContent = ST.meta.participants || '—';
+
+  var last = ST.meta.lastPostedAt || 0;
+  if (last) {
+    $('kpiLast').textContent = fmtShort(last);
+    $('kpiLastSub').textContent = fmtDelta(last);
+  } else {
+    $('kpiLast').textContent = '—'; $('kpiLastSub').textContent = '—';
+  }
+
+  var srcLabel = ST.sourceLabel || (ST.source === 'live' ? '实时接口' : ST.source === 'manual' ? '手动导入' : '内置快照');
+  $('kpiSrc').textContent = srcLabel;
+  $('kpiSrcSub').textContent = ST.source === 'live'
+    ? '实时 · 每 60s 自动刷新'
+    : (ST.autoPaused ? '已同步快照 · 自动拉取受跨域限制'
+      : (IS_FILE ? ('采样于 ' + fmtDT(BASELINE ? BASELINE.l : Date.now()) + ' · 可一键同步')
+        : (ST.lastAttempt ? '最后尝试 ' + fmtTime(ST.lastAttempt) : '内置真实快照')));
+}
+
+/* ==========================================================================
+   6. 渲染：时间轴（Canvas）
+   ========================================================================== */
+function drawTimeline() {
+  var cvs = $('timeline');
+  if (!cvs) return;
+  var wrap = $('tlWrap');
+  var W = wrap.clientWidth || 900;
+  var H = cvs.clientHeight || 440;
+  var dpr = window.devicePixelRatio || 1;
+  cvs.width = Math.round(W * dpr);
+  cvs.height = Math.round(H * dpr);
+  var g = cvs.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  var L = 52, R = 16, T = 16, B = 34;              // 边距
+  var pw = W - L - R, ph = H - T - B;
+
+  // ---- 坐标域 ----
+  var times = [];
+  ST.posts.forEach(function (p) { times.push(p.ms); });
+  var tMin = ST.meta.topicCreatedAt || (times.length ? Math.min.apply(null, times) : Date.now() - 86400000);
+  var tMax = Math.max(ST.meta.lastPostedAt || 0, Date.now());
+  if (tMax <= tMin) tMax = tMin + 3600000;
+  var tPad = (tMax - tMin) * 0.02;
+  tMin -= tPad; tMax += tPad;
+
+  var maxFloor = ST.meta.highest || 1;
+  var realMax = 0;
+  ST.posts.forEach(function (p) { if (p.n > realMax) realMax = p.n; });
+  if (realMax > maxFloor) maxFloor = realMax;
+  var yTop = (ST.fit === 'all') ? TARGET_MAX : Math.max(64, Math.ceil((maxFloor + 24) / 32) * 32);
+
+  var X = function (ms) { return L + (ms - tMin) / (tMax - tMin) * pw; };
+  var Y = function (n) { return T + ph - (n / yTop) * ph; };
+
+  // ---- 背景网格 ----
+  g.strokeStyle = 'rgba(0,0,0,0.055)';
+  g.lineWidth = 1;
+  // 纵向（时间）刻度：按跨度自适应
+  var spanH = (tMax - tMin) / 3600000;
+  var stepH = spanH > 72 ? 24 : spanH > 36 ? 12 : spanH > 14 ? 6 : spanH > 6 ? 3 : 1;
+  var tick = new Date(tMin);
+  tick.setMinutes(0, 0, 0);
+  tick.setHours(Math.ceil(tick.getHours() / stepH) * stepH);
+  g.font = '700 10.5px ' + FONT;
+  g.textAlign = 'center';
+  for (var tt = tick.getTime(); tt <= tMax; tt += stepH * 3600000) {
+    var x = X(tt);
+    if (x < L - 1) continue;
+    g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ph); g.stroke();
+    g.fillStyle = '#6C7A80';
+    g.fillText(fmtShort(tt), x, T + ph + 15);
+  }
+  // 横向（楼层）刻度
+  g.textAlign = 'right';
+  var yStep = yTop > 700 ? 128 : (yTop > 320 ? 64 : 32);
+  for (var yv = 0; yv <= yTop; yv += yStep) {
+    var y = Y(yv);
+    g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke();
+    g.fillStyle = '#6C7A80';
+    g.fillText(String(yv), L - 7, y + 3.5);
+  }
+  // 轴线
+  g.strokeStyle = '#000'; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(L, T); g.lineTo(L, T + ph); g.lineTo(L + pw, T + ph); g.stroke();
+
+  // 开楼时刻标记
+  if (ST.meta.topicCreatedAt) {
+    var ox = X(ST.meta.topicCreatedAt);
+    g.save();
+    g.setLineDash([3, 3]);
+    g.strokeStyle = 'rgba(0,0,0,0.4)'; g.lineWidth = 1.3;
+    g.beginPath(); g.moveTo(ox, T); g.lineTo(ox, T + ph); g.stroke();
+    g.restore();
+    g.font = '900 10.5px ' + FONT;
+    g.textAlign = 'left';
+    var ot = '开楼 ' + fmtShort(ST.meta.topicCreatedAt);
+    var ow = g.measureText(ot).width;
+    g.fillStyle = '#FFFFFF'; g.strokeStyle = '#000'; g.lineWidth = 1.4;
+    g.beginPath();
+    if (g.roundRect) { g.roundRect(ox + 2, T + 2, ow + 10, 15, 4); } else { g.rect(ox + 2, T + 2, ow + 10, 15); }
+    g.fill(); g.stroke();
+    g.fillStyle = '#000';
+    g.fillText(ot, ox + 7, T + 13);
+  }
+
+  // ---- 里程碑横线 ----
+  g.textAlign = 'left';
+  for (var mi = 0; mi < MILESTONES.length; mi++) {
+    var m = MILESTONES[mi];
+    if (m > yTop) continue;
+    var my = Y(m);
+    g.save();
+    g.setLineDash([5, 4]);
+    g.strokeStyle = 'rgba(0,0,0,0.45)';
+    g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(L, my); g.lineTo(L + pw, my); g.stroke();
+    g.restore();
+    // 标签
+    var label = m + ' 楼';
+    g.font = '900 11px ' + FONT;
+    var tw = g.measureText(label).width;
+    g.fillStyle = '#FFFFFF';
+    g.strokeStyle = '#000'; g.lineWidth = 1.6;
+    var bx = L + 4, by = my - 8;
+    g.beginPath();
+    if (g.roundRect) { g.roundRect(bx, by, tw + 12, 16, 5); } else { g.rect(bx, by, tw + 12, 16); }
+    g.fill(); g.stroke();
+    g.fillStyle = '#000';
+    g.fillText(label, bx + 6, by + 12);
+  }
+
+  // ---- 数据点 ----
+  var pts = [];
+  ST.posts.forEach(function (p) {
+    if (p.n > yTop) return;
+    var x = X(p.ms), y = Y(p.n);
+    pts.push({ x: x, y: y, n: p.n });
+  });
+  pts.sort(function (a, b) { return a.n - b.n; });
+
+  var mySet = ST.mySet;
+  // 非我的点先画
+  for (var i = 0; i < pts.length; i++) {
+    var pt = pts[i];
+    var rec = ST.posts.get(pt.n);
+    if (!rec) continue;
+    if (mySet.has(pt.n)) continue;
+    g.beginPath();
+    g.arc(pt.x, pt.y, 3.1, 0, Math.PI * 2);
+    g.fillStyle = rec.valid ? '#D7FCAE' : '#9AA0A6';
+    g.fill();
+    g.strokeStyle = '#000'; g.lineWidth = 1; g.stroke();
+  }
+  // 我的点（高亮）
+  for (var j = 0; j < pts.length; j++) {
+    var pt2 = pts[j];
+    if (!mySet.has(pt2.n)) continue;
+    var rec2 = ST.posts.get(pt2.n);
+    g.beginPath();
+    g.arc(pt2.x, pt2.y, 7.5, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(115,249,154,0.45)'; g.fill();
+    g.beginPath();
+    g.arc(pt2.x, pt2.y, 4.4, 0, Math.PI * 2);
+    g.fillStyle = rec2 && rec2.valid ? '#D7FCAE' : '#FFFFFF';
+    g.fill();
+    g.strokeStyle = '#000'; g.lineWidth = 2.4; g.stroke();
+  }
+  // 选中 / 聚焦楼层
+  if (ST.focusFloor && ST.posts.get(ST.focusFloor)) {
+    var fp = null;
+    for (var q = 0; q < pts.length; q++) { if (pts[q].n === ST.focusFloor) { fp = pts[q]; break; } }
+    if (fp) {
+      g.beginPath(); g.arc(fp.x, fp.y, 9.5, 0, Math.PI * 2);
+      g.strokeStyle = '#C8090E'; g.lineWidth = 2.6; g.stroke();
+      g.beginPath(); g.moveTo(fp.x, T); g.lineTo(fp.x, T + ph);
+      g.strokeStyle = 'rgba(200,9,14,0.35)'; g.lineWidth = 1; g.stroke();
+    }
+  }
+  ST.pts = pts;
+
+  // ---- 空数据提示 ----
+  if (!pts.length) {
+    g.fillStyle = '#9AA0A6';
+    g.font = '800 13px ' + FONT;
+    g.textAlign = 'center';
+    g.fillText('暂无楼层数据，请手动导入 JSON 或点击「立即刷新」', L + pw / 2, T + ph / 2);
+  }
+  $('tlCount').textContent = ST.posts.size ? ('共 ' + ST.posts.size + ' 层已载入 · ' + (pts.length) + ' 点在视野内') : '';
+}
+
+/* 命中测试：找离鼠标最近的点 */
+function hitPoint(mx, my) {
+  var best = null, bestD = 13;
+  for (var i = 0; i < ST.pts.length; i++) {
+    var p = ST.pts[i];
+    var d = Math.sqrt((p.x - mx) * (p.x - mx) + (p.y - my) * (p.y - my));
+    if (d < bestD) { bestD = d; best = p; }
+  }
+  return best;
+}
+
+function showTip(pt, clientX, clientY) {
+  var rec = ST.posts.get(pt.n);
+  if (!rec) return;
+  var tip = $('tlTip');
+  var tagCls = rec.valid ? 'v' : 'i';
+  var tagTxt = rec.valid
+    ? (rec.strict ? '有效模板回复' : '有效模板回复（严格字面口径下不计）')
+    : '灌水 / 无效回复';
+  var html = '<div class="t-n">' + rec.n + ' 楼 · ' + esc(rec.user) + '</div>' +
+             '<div class="t-meta">' + fmtDT(rec.ms) + ' · ' + fmtDelta(rec.ms) + '</div>' +
+             '<div class="t-body">' + (rec.excerpt ? esc(rec.excerpt) : '<i>（无正文）</i>') + '</div>' +
+             '<span class="t-tag ' + tagCls + '">' + tagTxt + '</span>';
+  tip.innerHTML = html;
+  tip.classList.add('on');
+  var wrap = $('tlWrap');
+  var r = wrap.getBoundingClientRect();
+  var tw = tip.offsetWidth || 220, th = tip.offsetHeight || 80;
+  var x = pt.x + 14, y = pt.y - th - 10;
+  if (x + tw > r.width - 4) x = pt.x - tw - 14;
+  if (y < 4) y = pt.y + 14;
+  tip.style.left = Math.max(4, x) + 'px';
+  tip.style.top = Math.max(4, y) + 'px';
+}
+function hideTip() { $('tlTip').classList.remove('on'); }
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ==========================================================================
+   7. 渲染：每日体量条
+   ========================================================================== */
+function renderDayStrip() {
+  var box = $('dayStrip');
+  var byDay = {};
+  ST.posts.forEach(function (p) {
+    var d = fmtDate(p.ms);
+    byDay[d] = (byDay[d] || 0) + 1;
+  });
+  var days = Object.keys(byDay).sort();
+  if (!days.length) { box.innerHTML = ''; return; }
+  var mx = 0;
+  days.forEach(function (d) { if (byDay[d] > mx) mx = byDay[d]; });
+  var html = '';
+  for (var i = 0; i < days.length; i++) {
+    var d = days[i];
+    var pct = Math.round(byDay[d] / mx * 100);
+    html += '<div class="daycell"><div class="d-n">' + d.slice(5) + '</div>' +
+            '<div class="d-v">' + byDay[d] + ' <span style="font-size:10px;font-weight:800;color:#6C7A80">层</span></div>' +
+            '<div class="d-bar"><i style="width:' + pct + '%"></i></div></div>';
+  }
+  box.innerHTML = html;
+}
+
+/* ==========================================================================
+   8. 渲染：里程碑轨（含官方「顺延一楼」规则）
+   ========================================================================== */
+/** 里程碑解析：caliber = 'loose'（主判定，默认）| 'strict'（严格字面口径，对照） */
+function resolveMilestone(m, caliber) {
+  var useStrict = caliber === 'strict';
+  var chain = [];
+  var n = m, guard = 0;
+  while (n <= (ST.meta.highest + 4) && guard < 60) {
+    var rec = ST.posts.get(n);
+    var ok = rec ? (useStrict ? rec.strict : rec.valid) : false;
+    chain.push({ n: n, rec: rec, valid: ok, missing: !rec });
+    if (rec && ok) break;
+    n++; guard++;
+  }
+  var landing = chain.length ? chain[chain.length - 1] : null;
+  return {
+    mark: m,
+    chain: chain,
+    shifted: chain.length > 1,
+    landing: landing,
+    reached: chain.length > 0 && chain[0].rec != null
+  };
+}
+
+function renderMilestones() {
+  var box = $('msGrid');
+  var html = '';
+  for (var i = 0; i < MILESTONES.length; i++) {
+    var m = MILESTONES[i];
+    var r = resolveMilestone(m, 'loose');
+    var rs = resolveMilestone(m, 'strict');
+    var landing = r.landing;
+    var status, statusCls;
+    if (!landing || !landing.rec) {
+      status = '未达成'; statusCls = 'p';
+    } else if (landing.valid) {
+      status = '有效模板回复'; statusCls = 'v';
+    } else {
+      status = '灌水'; statusCls = 'i';
+    }
+    var cls = 'ms ' + (landing && landing.rec ? (landing.valid ? 'done' : '') : 'pending');
+
+    var body = '';
+    var shift = '';
+    if (!landing || !landing.rec) {
+      body = '<div class="ms-body">该楼层尚未出现。下方预测器给出预计达成时刻。</div>';
+      shift = '<div class="ms-shift">等待中 · 距目标还差 <b>' + Math.max(0, TARGET_MAX - m) + '</b> 层</div>';
+    } else {
+      body = '<div class="ms-body">' + (landing.rec.excerpt ? esc(landing.rec.excerpt) : '<i>（无正文）</i>') + '</div>';
+      if (r.shifted) {
+        var chainTxt = r.chain.map(function (c) {
+          return c.n + (c.missing ? '(已删)' : (c.valid ? '✓有效' : '✗灌水'));
+        }).join(' → ');
+        shift = '<div class="ms-shift">官方规则原文：「如所在楼层是无效回复，则<b>顺延一楼</b>」。<br>' +
+                '第 <b>' + m + '</b> 楼为灌水 → <b>顺延至 ' + (r.chain[1] ? r.chain[1].n : m + 1) + ' 楼</b>' +
+                (r.chain.length > 2 ? '（该层仍无效）→ 继续顺延至首个有效楼层 <b>' + landing.n + ' 楼</b>' : '（该层即有效模板回复）') +
+                '<div class="chain">' + chainTxt + '</div>' +
+                (rs.landing && rs.landing.n !== landing.n
+                  ? '<div class="chain" style="margin-top:6px;border-top:1px dashed rgba(0,0,0,.2);padding-top:6px">' +
+                    '<b>口径对照：</b>官方排除的是「重复 / <b>灌水</b> / 与活动无关」的<b>内容</b>，不是排版格式 —— ' +
+                    '带空格但四行齐全的回帖不算灌水，故主判定取宽松。若改用<b>严格字面口径</b>（正文须含连续字面「我是1024Builder」），' +
+                    '则该奖位会顺延到 <b>' + rs.landing.n + ' 楼</b>（' + esc(rs.landing.rec ? rs.landing.rec.user : '') + '）。' +
+                    '<br>两种口径我都算给你看。</div>'
+                  : '') +
+                '</div>';
+      } else {
+        shift = '<div class="ms-shift">官方规则原文：「如所在楼层是无效回复，则顺延一楼」。<br>' +
+                '第 <b>' + m + '</b> 楼本身即为<b>有效模板回复</b>，<b>无需顺延</b>。</div>';
+      }
+    }
+    var etaTxt = '';
+    if ((!landing || !landing.rec) && ST.predict) {
+      etaTxt = '<div class="ms-shift">预计达成：<b>' + fmtDT(ST.predict.etaMain) + '</b></div>';
+    }
+    html += '<div class="' + cls + '" data-ms="' + m + '">' +
+            '<div class="ms-n">' + m + ' <span>楼</span></div>' +
+            '<span class="ms-status ' + statusCls + '">' + status + '</span>' +
+            (landing && landing.rec ? '<div class="ms-user">' + esc(landing.rec.user) + ' · ' + fmtShort(landing.rec.ms) + '</div>' : '') +
+            body + shift + etaTxt +
+            '</div>';
+  }
+  box.innerHTML = html;
+}
+
+/* ==========================================================================
+   9. 渲染：预测器
+   ========================================================================== */
+function computeRates() {
+  var times = [];
+  ST.posts.forEach(function (p) { times.push(p.ms); });
+  if (!times.length) return null;
+  var ref = ST.meta.lastPostedAt || Math.max.apply(null, times);
+  var floorRef = ST.meta.highest || 1;
+
+  function rateIn(hours) {
+    var from = ref - hours * 3600000;
+    var c = 0;
+    ST.posts.forEach(function (p) { if (p.ms > from && p.ms <= ref) c++; });
+    return c / hours;
+  }
+  var r6 = rateIn(6);
+  var r24 = rateIn(24);
+  var first = Math.min.apply(null, times);
+  var spanH = Math.max(0.5, (ref - first) / 3600000);
+  var rAll = ST.posts.size / spanH;
+
+  function eta(r) {
+    if (!r || r <= 0.0001) return null;
+    var remain = Math.max(0, TARGET_MAX - floorRef);
+    return Date.now() + (remain / r) * 3600000;
+  }
+  return {
+    ref: ref, floorRef: floorRef,
+    r6: r6, r24: r24, rAll: rAll,
+    remain: Math.max(0, TARGET_MAX - floorRef),
+    eta6: eta(r6), eta24: eta(r24), etaAll: eta(rAll)
+  };
+}
+
+function renderPredictor() {
+  var r = computeRates();
+  var mainEta = $('etaMain'), mainSub = $('etaSub');
+  if (!r) {
+    mainEta.textContent = '数据不足';
+    mainSub.textContent = '导入楼层数据后即可预测';
+    $('rates').innerHTML = '';
+    $('predictNote').textContent = '';
+    $('progBar').style.width = '0%';
+    $('progNow').textContent = '—';
+    $('kpiEta').textContent = '—';
+    return;
+  }
+  ST.predict = { etaMain: r.eta6, rates: r };
+
+  var pct = Math.min(100, (r.floorRef / TARGET_MAX) * 100);
+  $('progBar').style.width = pct + '%';
+  $('progMark').style.left = pct + '%';
+  $('progNow').textContent = '当前 ' + r.floorRef + ' 楼';
+
+  var rows = [
+    { name: '近 6 小时（主口径）', r: r.r6, eta: r.eta6, main: true },
+    { name: '近 24 小时', r: r.r24, eta: r.eta24, main: false },
+    { name: '全程均速', r: r.rAll, eta: r.etaAll, main: false }
+  ];
+  var maxR = 0;
+  rows.forEach(function (x) { if (x.r > maxR) maxR = x.r; });
+  var html = '';
+  rows.forEach(function (x) {
+    var w = maxR > 0 ? Math.round(x.r / maxR * 100) : 0;
+    html += '<div class="rate-row' + (x.main ? ' main' : '') + '">' +
+            '<span class="rname">' + x.name + '</span>' +
+            '<span class="rb"><i style="width:' + w + '%"></i></span>' +
+            '<span class="rv">' + x.r.toFixed(2) + ' 楼/时</span>' +
+            '</div>';
+  });
+  $('rates').innerHTML = html;
+
+  if (r.eta6) {
+    mainEta.textContent = fmtDT(r.eta6);
+    mainSub.textContent = '还差 ' + r.remain + ' 楼 · 约 ' + fmtLead(r.eta6) + '（' + fmtDate(r.eta6) + ' 之前）';
+    $('kpiEta').textContent = fmtShort(r.eta6);
+    $('kpiEtaSub').textContent = '近 6 小时 ' + r.r6.toFixed(2) + ' 楼/时 · 还差 ' + r.remain + ' 楼';
+  } else {
+    mainEta.textContent = '近期无新楼层';
+    mainSub.textContent = '无法按近 6 小时速率外推，请刷新或导入新数据';
+    $('kpiEta').textContent = '—';
+    $('kpiEtaSub').textContent = '速率不足';
+  }
+
+  var note = '口径说明：近 6 小时窗口取「最后一条楼层时间」往前 6 小时；当前快照最后回复于 ' + fmtDT(r.ref) +
+    '，该窗口落在夜间低峰，因此主口径偏保守。参考口径中，近 24 小时 ' + r.r24.toFixed(2) +
+    ' 楼/时、全程均速 ' + r.rAll.toFixed(2) + ' 楼/时。官方活动截止 10-23 23:59，若要落在截止前需接近全程均速。';
+  if (r.eta24) note += '（近 24 小时口径预计 ' + fmtDT(r.eta24) + '）';
+  if (r.etaAll) note += '（全程均速口径预计 ' + fmtDT(r.etaAll) + '）';
+  $('predictNote').textContent = note;
+}
+
+/* ==========================================================================
+   10. 渲染：我的楼层
+   ========================================================================== */
+function findByName(name) {
+  var key = String(name || '').trim().toLowerCase();
+  var out = [];
+  if (!key) return out;
+  ST.posts.forEach(function (p) {
+    if (String(p.user).toLowerCase() === key) out.push(p);
+  });
+  out.sort(function (a, b) { return a.n - b.n; });
+  return out;
+}
+
+function renderMine() {
+  var box = $('mineResult');
+  var chips = $('mineChips');
+  if (!ST.myName) {
+    box.innerHTML = '<div class="mine-empty">还没有查询。输入昵称后点「定位我的楼层」。</div>';
+    chips.innerHTML = '';
+    ST.mySet = new Set();
+    return;
+  }
+  var list = findByName(ST.myName);
+  ST.mySet = new Set();
+  for (var i = 0; i < list.length; i++) ST.mySet.add(list[i].n);
+
+  if (!list.length) {
+    box.innerHTML = '<div class="mine-empty">在已载入的 ' + ST.posts.size + ' 层里没找到昵称「<b>' + esc(ST.myName) +
+      '</b>」。<br>提示：昵称需与社区完全一致；请先导入更多分页 JSON 以覆盖全部楼层。</div>';
+    chips.innerHTML = '';
+    return;
+  }
+  var validCount = list.filter(function (p) { return p.valid; }).length;
+  var firstN = list[0].n, lastN = list[list.length - 1].n;
+  var tMin = ST.meta.topicCreatedAt || (list[0].ms - 3600000);
+  var tMax = Math.max(ST.meta.lastPostedAt || 0, Date.now());
+  var posPct = clamp((list[0].ms - tMin) / Math.max(1, tMax - tMin) * 100, 0, 100);
+
+  var html = '<div class="mine-sum">' +
+    '<div><div class="ms-l">你的楼层数</div><div class="ms-v">' + list.length + '</div></div>' +
+    '<div><div class="ms-l">其中有效回复</div><div class="ms-v">' + validCount + '</div></div>' +
+    '<div><div class="ms-l">首个楼层</div><div class="ms-v">' + firstN + '</div></div>' +
+    '<div><div class="ms-l">末个楼层</div><div class="ms-v">' + lastN + '</div></div>' +
+    '<div><div class="ms-l">时间轴位置</div><div class="ms-v">' + posPct.toFixed(0) + '%</div></div>' +
+    '</div>';
+
+  html += '<div class="mine-list">';
+  for (var j = 0; j < list.length; j++) {
+    var p = list[j];
+    var tag = p.valid ? '<span class="chip v">有效模板回复</span>'
+              : '<span class="chip i">灌水</span>';
+    if (p.valid && !p.strict) tag += '<span class="chip n">严格口径不计</span>';
+    html += '<div class="mine-item' + (p.valid ? ' mine-valid' : '') + '">' +
+            '<span class="mi-n">' + p.n + ' 楼</span>' +
+            '<span class="mi-c"><span class="mi-t">' + fmtDT(p.ms) + ' · ' + fmtDelta(p.ms) + '</span> ' + tag +
+            '<div class="mi-x">' + (p.excerpt ? esc(p.excerpt) : '<i>（无正文）</i>') + '</div></span>' +
+            '<button class="btn sm" data-focus="' + p.n + '">定位</button>' +
+            '</div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+
+  // 常用昵称提示（取出现次数最多的作者）
+  var freq = {};
+  ST.posts.forEach(function (p) { freq[p.user] = (freq[p.user] || 0) + 1; });
+  var top = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; }).slice(0, 8);
+  var ch = '';
+  for (var k = 0; k < top.length; k++) {
+    ch += '<button class="btn sm" data-name="' + esc(top[k]) + '">' + esc(top[k]) + ' (' + freq[top[k]] + ')</button>';
+  }
+  chips.innerHTML = ch;
+}
+
+/* ==========================================================================
+   11. 楼层贴纸卡
+   ========================================================================== */
+function renderFloorCard(n) {
+  var box = $('floorCard');
+  var rec = ST.posts.get(n);
+  if (!rec) { box.classList.remove('on'); return; }
+  var tag = rec.valid
+    ? ('<span class="chip v">有效模板回复</span>' + (rec.strict ? '' : '<span class="chip n">严格口径不计</span>'))
+    : '<span class="chip i">灌水 / 无效回复</span>';
+  box.innerHTML =
+    '<div class="fc-top"><span class="fc-n">' + rec.n + ' 楼</span>' +
+    '<span class="fc-user">' + esc(rec.user) + '</span>' +
+    '<span class="fc-time">' + fmtDT(rec.ms) + ' · ' + fmtDelta(rec.ms) + '</span></div>' +
+    '<div class="fc-tags">' + tag + '<span class="chip n">楼号 ' + rec.n + ' / 1024</span></div>' +
+    '<div class="fc-body">' + (rec.excerpt ? esc(rec.excerpt) : '<i>（该楼无正文内容）</i>') + '</div>';
+  box.classList.add('on');
+}
+
+/* ==========================================================================
+   12. 冲楼预测卡（Canvas → PNG）
+   ========================================================================== */
+function drawMascot(g, x, y, s) {
+  g.save();
+  g.translate(x, y);
+  g.fillStyle = '#000000';
+  g.fillRect(0, 0, s, s);
+  g.fillStyle = '#FFFFFF';
+  g.fillRect(s * 0.20, s * 0.28, s * 0.19, s * 0.24);
+  g.fillRect(s * 0.60, s * 0.28, s * 0.19, s * 0.24);
+  g.fillStyle = '#73F99A';
+  g.fillRect(s * 0.62, s * 0.60, s * 0.17, s * 0.17);
+  g.restore();
+}
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  if (g.roundRect) { g.roundRect(x, y, w, h, r); return; }
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+function buildCard() {
+  var cvs = $('preview');
+  var g = cvs.getContext('2d');
+  var W = 1080, H = 1080;
+  var target = parseInt($('selTarget').value, 10) || 1024;
+  var name = ($('inpCardName').value || '').trim() || '一位 Builder';
+  var r = computeRates();
+  var cur = ST.meta.highest || 0;
+  var remain = Math.max(0, target - cur);
+  var eta = r ? (r.eta6 || r.eta24 || r.etaAll) : null;
+  var rate = r ? r.r6 : 0;
+  var now = Date.now();
+
+  // 背景：纸白 + 方格纹
+  g.fillStyle = '#F4F8F9'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(0,0,0,0.05)'; g.lineWidth = 2;
+  for (var x = 0; x < W; x += 26) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+  for (var y = 0; y < H; y += 26) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+
+  // 外框
+  g.strokeStyle = '#000000'; g.lineWidth = 6;
+  g.strokeRect(24, 24, W - 48, H - 48);
+
+  // 顶部贴纸徽章
+  g.save();
+  g.translate(70, 78); g.rotate(-0.035);
+  g.fillStyle = '#D7FCAE'; g.strokeStyle = '#000000'; g.lineWidth = 5;
+  roundRect(g, 0, 0, 470, 74, 37); g.fill(); g.stroke();
+  g.fillStyle = '#000000'; g.font = '900 34px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'middle';
+  g.fillText('1024 冲楼预测卡', 28, 39);
+  g.restore();
+
+  // 主标题
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#000000'; g.font = '900 92px ' + FONT;
+  g.fillText('目标 ' + target + ' 楼', 70, 268);
+
+  // 昵称（笔刷高光）
+  g.save();
+  g.translate(70, 300); g.rotate(-0.012);
+  var nickW = Math.min(880, 900);
+  g.fillStyle = '#CCFC9C';
+  roundRect(g, -8, 0, nickW, 92, 14); g.fill();
+  g.fillStyle = '#000000'; g.font = '900 60px ' + FONT;
+  var disp = name.length > 12 ? name.slice(0, 12) + '…' : name;
+  g.fillText(disp, 8, 66);
+  g.restore();
+
+  // 三个数据格
+  function statBox(bx, by, bw, label, value, sub, accent) {
+    g.fillStyle = accent ? '#D7FCAE' : '#FFFFFF';
+    g.strokeStyle = '#000000'; g.lineWidth = 5;
+    roundRect(g, bx, by, bw, 250, 18); g.fill(); g.stroke();
+    g.fillStyle = '#000000';
+    g.font = '900 30px ' + FONT; g.textAlign = 'left';
+    g.fillText(label, bx + 26, by + 52);
+    g.font = '900 74px ' + FONT;
+    g.fillText(value, bx + 26, by + 140);
+    g.fillStyle = '#3A4A50'; g.font = '800 26px ' + FONT;
+    g.fillText(sub, bx + 26, by + 195);
+  }
+  statBox(70, 430, 300, '当前楼层', String(cur), '最高楼号', false);
+  statBox(390, 430, 300, '还差', String(remain), '楼抵达目标', true);
+  statBox(710, 430, 300, '楼层速率', rate.toFixed(2), '楼/时（近 6h）', false);
+
+  // 预计达成
+  g.fillStyle = '#000000'; g.font = '900 34px ' + FONT; g.textAlign = 'left';
+  g.fillText('预计达成时刻', 70, 760);
+  g.font = '900 62px ' + FONT;
+  g.fillText(eta ? fmtDT(eta) : '数据不足', 70, 828);
+
+  // 进度条
+  var barY = 862, barW = 940, barX = 70;
+  g.fillStyle = '#FFFFFF'; g.strokeStyle = '#000000'; g.lineWidth = 5;
+  roundRect(g, barX, barY, barW, 40, 20); g.fill(); g.stroke();
+  var p = cur / TARGET_MAX;
+  if (p > 0) {
+    g.save();
+    roundRect(g, barX, barY, barW, 40, 20); g.clip();
+    g.fillStyle = '#90CC78'; g.fillRect(barX, barY, barW * p, 40);
+    g.restore();
+  }
+  g.fillStyle = '#000000'; g.font = '800 26px ' + FONT;
+  g.fillText('0', barX, barY + 76);
+  g.textAlign = 'right'; g.fillText('1024', barX + barW, barY + 76);
+  g.textAlign = 'left';
+
+  // 里程碑刻度
+  var ms2 = [128, 256, 512, 1024];
+  for (var i = 0; i < ms2.length; i++) {
+    var mx = barX + barW * (ms2[i] / TARGET_MAX);
+    g.strokeStyle = '#000000'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(mx, barY - 10); g.lineTo(mx, barY + 50); g.stroke();
+  }
+
+  // 吉祥物 + 页脚
+  drawMascot(g, 70, 962, 68);
+  g.fillStyle = '#3A4A50'; g.font = '800 22px ' + FONT;
+  g.fillText('TRAE 社区 1024 狂欢周 · 玩法一盖楼 · forum.trae.cn/t/topic/325833', 158, 990);
+  g.fillText('生成时间 ' + fmtDT(now) + ' · 数据可能随楼层实时变化', 158, 1022);
+  return cvs;
+}
+
+function downloadCard() {
+  var cvs = buildCard();
+  var target = $('selTarget').value;
+  var name = ($('inpCardName').value || 'builder').trim().replace(/[\\/:*?"<>|]/g, '_');
+  try {
+    var url = cvs.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '1024冲楼预测卡-' + target + '楼-' + name + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setMsg('importMsg', '✅ 预测卡已生成并开始下载（PNG，1080×1080）。', 'ok');
+  } catch (e) {
+    setMsg('importMsg', '⚠️ 导出失败：' + (e && e.message ? e.message : '未知错误'), 'err');
+  }
+}
+
+/* ==========================================================================
+   13. 降级横幅
+   ========================================================================== */
+function setMsg(id, text, cls) {
+  var el = $(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'msg ' + (cls || '');
+}
+
+function showBanner(kind, text, actions) {
+  var b = $('banner');
+  b.classList.remove('is-hidden', 'ok');
+  if (kind === 'ok') {
+    b.classList.add('ok');
+    $('bannerIco').textContent = '✅';
+    $('bannerTitle').textContent = '实时数据已更新';
+  } else if (kind === 'info') {
+    b.classList.add('info');
+    $('bannerIco').textContent = '📡';
+    $('bannerTitle').textContent = '数据源说明';
+  } else {
+    $('bannerIco').textContent = '⚠️';
+    $('bannerTitle').textContent = '⚠️ 实时数据获取失败';
+  }
+  $('bannerText').innerHTML = text;
+  var box = $('bannerActions');
+  box.innerHTML = '';
+  for (var i = 0; i < (actions || []).length; i++) {
+    var a = actions[i];
+    var btn = document.createElement('button');
+    btn.className = 'btn' + (a.accent ? ' accent' : '');
+    btn.textContent = a.label;
+    btn.addEventListener('click', a.onClick);
+    box.appendChild(btn);
+  }
+}
+
+function corsHintHTML(err) {
+  var detail = '';
+  if (err) {
+    var m = String(err.message || err);
+    if (/Failed to fetch|NetworkError|Load failed/i.test(m)) {
+      detail = '浏览器已拦截跨域请求（典型 <code>TypeError: Failed to fetch</code>）。';
+    } else {
+      detail = '错误信息：<code>' + esc(m) + '</code>';
+    }
+  }
+  return detail +
+    'forum.trae.cn 的 JSON 接口未返回 <code>Access-Control-Allow-Origin</code> 响应头，' +
+    '页面脚本无法直接读取（2026-10-21 实测确认）。' +
+    '<b>页面不会白屏</b>——当前展示的是最近一次成功快照（已存入 localStorage）。' +
+    '为避免每 60s 重复触发浏览器的 CORS 告警，<b>自动刷新已熔断暂停</b>，可随时点「重试抓取」恢复。' +
+    '要拿最新数据，请点「同步最新楼层」按三步法：打开 JSON 链接 → 复制全文 → 粘贴进文本框解析。';
+}
+
+/* ==========================================================================
+   14. 数据抓取 + 自动刷新
+   ========================================================================== */
+function refresh(manual) {
+  if (ST.inFlight) return Promise.resolve();
+  if (!manual && IS_FILE) {
+    // 本地文件方式打开：跨域必被拦截，自动抓取无意义 → 走「手动导入」通道
+    showFileModeBanner();
+    return Promise.resolve();
+  }
+  ST.inFlight = true;
+  ST.lastAttempt = Date.now();
+  if (manual) ST.autoPaused = false;   // 手动重试 = 恢复自动轮询
+  $('btnRefresh').disabled = true;
+  return fetchJSON(topicUrl(), 18000).then(function (data) {
+    applyTopicMeta(data);
+    var ps = extractPosts(data);
+    mergePosts(ps);
+    ST.source = 'live';
+    ST.sourceLabel = '实时接口';
+    ST.error = null;
+    ST.autoPaused = false;
+    saveSnapshot();
+    renderAll();
+    loadSampledPages();
+    showBanner('ok', '已从 <code>' + topicUrl() + '</code> 取得实时数据：最高 ' + ST.meta.highest +
+      ' 楼 · 参与者 ' + ST.meta.participants + ' · 最后回复 ' + fmtDT(ST.meta.lastPostedAt) + '。',
+      [{ label: '↻ 再刷新一次', onClick: function () { refresh(true); } },
+       { label: '⬇ 手动导入更多分页', accent: true, onClick: function () { scrollToImport(); } }]);
+  }, function (err) {
+    // 抓取失败：保留最近一次成功快照 + 醒目提示，页面绝不白屏
+    ST.error = err;
+    ST.autoPaused = true;          // 熔断：避免每 60s 重复触发浏览器 CORS 告警
+    try { renderAll(); } catch (e) { /* noop */ }
+    showBanner('err', corsHintHTML(err), [
+      { label: '⟳ 重试抓取', accent: true, onClick: function () { refresh(true); } },
+      { label: '⬇ 手动导入 JSON', onClick: function () { scrollToImport(); } }
+    ]);
+  }).then(function () {
+    ST.inFlight = false;
+    $('btnRefresh').disabled = false;
+  }, function () {
+    ST.inFlight = false;
+    $('btnRefresh').disabled = false;
+  });
+}
+
+function startAutoRefresh() {
+  if (ST.autoTimer) clearInterval(ST.autoTimer);
+  ST.autoTimer = setInterval(function () {
+    if (document.hidden) return;          // 页面不可见时暂停，减少对论坛的压力
+    if (ST.autoPaused) return;             // 熔断：跨域受限后暂停自动轮询，避免重复告警
+    refresh(false);
+  }, REFRESH_MS);
+}
+
+/** 默认状态说明条：跨域受限是浏览器同源策略的平台特性，不是故障，故用中性配色 */
+function showFileModeBanner() {
+  var snapTime = BASELINE ? fmtDT(BASELINE.l) : '—';
+  showBanner('info',
+    '<b>数据源</b>：内置真实快照（' + snapTime + ' 采样，' + ST.meta.highest + ' 楼 / ' + ST.posts.size +
+    ' 个真实楼层）· 浏览器同源策略限制，页面无法自动拉取最新楼层 —— 点「<b>同步最新楼层</b>」一键更新（3 步）。',
+    [{ label: '⟳ 同步最新楼层', accent: true, onClick: function () { openSyncModal(); } },
+     { label: '📖 为什么必须手动？', onClick: function () { openAbout(); } }]);
+}
+
+/* ==========================================================================
+   15. 手动导入解析
+   ========================================================================== */
+/** 尝试从一个文本里解析出多个顶层 JSON 文档 */
+function parseMany(text) {
+  var s = String(text || '').trim();
+  if (!s) return [];
+  var out = [];
+  // ① 整体就是一个 JSON
+  try { out.push(JSON.parse(s)); return out; } catch (e) { /* 继续 */ }
+  // ② 花括号扫描，逐个切出顶层 {...}
+  var depth = 0, start = -1, inStr = false, esc2 = false;
+  for (var i = 0; i < s.length; i++) {
+    var ch = s[i];
+    if (inStr) {
+      if (esc2) { esc2 = false; continue; }
+      if (ch === '\\') { esc2 = true; continue; }
+      if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === '{') { if (depth === 0) start = i; depth++; continue; }
+    if (ch === '}') {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        var seg = s.slice(start, i + 1);
+        try { out.push(JSON.parse(seg)); } catch (e2) { /* 跳过坏的片段 */ }
+        start = -1;
+      }
+      if (depth < 0) depth = 0;
+    }
+  }
+  // ③ 兜底：整体是数组
+  if (!out.length) {
+    var a = s.indexOf('['), b = s.lastIndexOf(']');
+    if (a >= 0 && b > a) { try { out.push(JSON.parse(s.slice(a, b + 1))); } catch (e3) { /* noop */ } }
+  }
+  return out;
+}
+
+function doParseImport() {
+  var ta = $('taJson');
+  var docs = parseMany(ta.value);
+  if (!docs.length) {
+    setMsg('importMsg', '❌ 解析失败：没有找到合法的 JSON。请确认复制的是以 { 开头的完整 JSON 文本。', 'err');
+    return;
+  }
+  var totalPosts = 0, totalDocs = 0, hasMeta = false;
+  for (var i = 0; i < docs.length; i++) {
+    var d = docs[i];
+    if (!d || typeof d !== 'object') continue;
+    totalDocs++;
+    applyTopicMeta(d);
+    if (d.highest_post_number != null || d.post_stream) hasMeta = true;
+    var ps = extractPosts(d);
+    totalPosts += ps.length;
+    mergePosts(ps);
+  }
+  if (!totalPosts) {
+    var onlyStream = docs.some(function (d) { return d && d.post_stream && Array.isArray(d.post_stream.stream) && !(d.post_stream.posts || []).length; });
+    setMsg('importMsg', '❌ 解析到 ' + totalDocs + ' 个 JSON，但没找到楼层正文（posts）。' +
+      (onlyStream ? '主帖 JSON 的 <code>post_stream.stream</code> 只有楼层 ID、没有正文，请改用分页 JSON（<code>/t/325833.json?page=N</code>）或同时粘贴主帖 JSON。' : ''),
+      'err');
+    return;
+  }
+  ST.source = 'manual';
+  ST.sourceLabel = '已同步快照';
+  ST.error = null;
+  saveSnapshot();
+  renderAll();
+  setMsg('importMsg', '✅ 解析成功：' + totalDocs + ' 个 JSON / ' + totalPosts + ' 条楼层记录，当前共载入 ' + ST.posts.size + ' 层。已写入 localStorage 快照。', 'ok');
+  setTimeout(closeSyncModal, 500);
+  showBanner('ok', '已同步最新楼层：共 <b>' + ST.posts.size + '</b> 层，最高楼号 <b>' + ST.meta.highest +
+    '</b>，参与者 <b>' + ST.meta.participants + '</b>，最后回复 <b>' + fmtDT(ST.meta.lastPostedAt) + '</b>。' +
+    '快照已存入 localStorage，下次打开自动恢复。',
+    [{ label: '⟳ 再同步一次', onClick: function () { openSyncModal(); } },
+     { label: '📖 关于数据源', accent: true, onClick: function () { openAbout(); } }]);
+}
+
+function scrollToImport() { openSyncModal(); }
+/** 打开「同步最新楼层」模态框（主路径） */
+function openSyncModal() {
+  var m = $('syncModal');
+  if (!m) return;
+  m.hidden = false;
+  document.body.style.overflow = 'hidden';
+  var ta = $('taJson');
+  if (ta) setTimeout(function () { ta.focus(); }, 120);
+}
+function closeSyncModal() {
+  var m = $('syncModal');
+  if (!m) return;
+  m.hidden = true;
+  document.body.style.overflow = '';
+}
+/** 跳到「关于数据源与跨域限制」区 */
+function openAbout() {
+  var el = $('aboutCard');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ==========================================================================
+   16. 总渲染
+   ========================================================================== */
+function renderAll() {
+  renderKPI();
+  renderPredictor();
+  renderMilestones();
+  renderMine();          // 先算「我的楼层」集合，再画时间轴，保证高亮点正确
+  drawTimeline();
+  renderDayStrip();
+  if (ST.selected != null) renderFloorCard(ST.selected);
+  try { buildCard(); } catch (e) { /* 卡片渲染失败不影响主流程 */ }
+}
+
+/* ==========================================================================
+   17. 事件绑定
+   ========================================================================== */
+function bindEvents() {
+  // 时间轴交互
+  var cvs = $('timeline');
+  cvs.addEventListener('mousemove', function (e) {
+    var r = cvs.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    var pt = hitPoint(mx, my);
+    if (pt) { showTip(pt, e.clientX, e.clientY); cvs.style.cursor = 'pointer'; }
+    else { hideTip(); cvs.style.cursor = 'default'; }
+  });
+  cvs.addEventListener('mouseleave', hideTip);
+  cvs.addEventListener('click', function (e) {
+    var r = cvs.getBoundingClientRect();
+    var pt = hitPoint(e.clientX - r.left, e.clientY - r.top);
+    if (!pt) return;
+    ST.selected = pt.n;
+    ST.focusFloor = pt.n;
+    renderFloorCard(pt.n);
+    drawTimeline();
+  });
+  // 触屏：点按查看
+  cvs.addEventListener('touchstart', function (e) {
+    if (!e.touches.length) return;
+    var t = e.touches[0];
+    var r = cvs.getBoundingClientRect();
+    var pt = hitPoint(t.clientX - r.left, t.clientY - r.top);
+    if (!pt) return;
+    ST.selected = pt.n; ST.focusFloor = pt.n;
+    renderFloorCard(pt.n);
+    drawTimeline();
+  }, { passive: true });
+
+  $('btnRefresh').addEventListener('click', function () { refresh(true); });
+  $('btnOpenSync').addEventListener('click', openSyncModal);
+  $('btnOpenSync2').addEventListener('click', openSyncModal);
+  $('btnCloseSync').addEventListener('click', closeSyncModal);
+  $('btnReload').addEventListener('click', function () { location.reload(); });
+  $('btnTryDirect').addEventListener('click', function () { closeSyncModal(); refresh(true); });
+  $('syncModal').addEventListener('click', function (e) { if (e.target === this) closeSyncModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSyncModal(); });
+
+  $('btnFitAll').addEventListener('click', function () {
+    ST.fit = 'all';
+    $('btnFitAll').classList.add('accent'); $('btnFitReached').classList.remove('accent');
+    drawTimeline();
+  });
+  $('btnFitReached').addEventListener('click', function () {
+    ST.fit = 'reached';
+    $('btnFitReached').classList.add('accent'); $('btnFitAll').classList.remove('accent');
+    drawTimeline();
+  });
+
+  $('btnFind').addEventListener('click', function () {
+    ST.myName = ($('inpName').value || '').trim();
+    renderMine();
+    drawTimeline();
+    if (ST.mySet.size) {
+      var first = ST.mySet.values().next().value;
+      ST.focusFloor = first;
+      drawTimeline();
+    }
+  });
+  $('inpName').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); $('btnFind').click(); }
+  });
+  $('mineChips').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-name]') : null;
+    if (!b) return;
+    $('inpName').value = b.getAttribute('data-name');
+    $('btnFind').click();
+  });
+  $('mineResult').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-focus]') : null;
+    if (!b) return;
+    var n = parseInt(b.getAttribute('data-focus'), 10);
+    ST.focusFloor = n; ST.selected = n;
+    renderFloorCard(n);
+    drawTimeline();
+    var tl = $('tlWrap');
+    if (tl) tl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  $('btnPreview').addEventListener('click', function () {
+    buildCard();
+    setMsg('importMsg', '预览已刷新（点击「生成并下载 PNG」导出）。', 'ok');
+  });
+  $('btnMake').addEventListener('click', downloadCard);
+  $('selTarget').addEventListener('change', buildCard);
+  $('inpCardName').addEventListener('input', function () {
+    try { buildCard(); } catch (e) { /* noop */ }
+  });
+
+  $('btnParse').addEventListener('click', doParseImport);
+  $('btnClearInput').addEventListener('click', function () { $('taJson').value = ''; setMsg('importMsg', '', ''); });
+  $('btnResetSnapshot').addEventListener('click', function () {
+    clearSnapshot();
+    loadBaseline();
+    ST.source = 'baseline';
+    ST.sourceLabel = '内置真实快照';
+    renderAll();
+    setMsg('importMsg', '🧹 本地缓存快照已清除，页面已回到内置基线快照。', 'ok');
+    showFileModeBanner();
+  });
+  $('btnOpenJson').addEventListener('click', function () { window.open(EP_TOPIC, '_blank', 'noopener'); });
+  $('btnOpenJsonPage').addEventListener('click', function () { window.open(EP_PAGE(7), '_blank', 'noopener'); });
+
+  var rz = null;
+  window.addEventListener('resize', function () {
+    if (rz) clearTimeout(rz);
+    rz = setTimeout(function () { drawTimeline(); }, 140);
+  });
+  window.addEventListener('beforeunload', function () { if (ST.autoTimer) clearInterval(ST.autoTimer); });
+}
+
+/* ==========================================================================
+   18. 启动
+   ========================================================================== */
+/**
+ * 调试/自动化接口：供截图录制与自测脚本驱动页面（不影响正常浏览）。
+ * 录制建议见 06-工具-tools/说明-使用说明-tools-guide.md 第七节。
+ */
+function exposeDebugAPI() {
+  window.__FW = {
+    state: ST,
+    refresh: refresh,
+    /** 临时改写数据源 URL —— 用于验证「抓取失败 → 降级不白屏」 */
+    setTopicUrl: function (u) { EP_OVERRIDE = u; return topicUrl(); },
+    getTopicUrl: topicUrl,
+    /** 模拟「我的楼层」查询，返回命中层数 */
+    search: function (name) {
+      $('inpName').value = name;
+      $('btnFind').click();
+      return ST.mySet.size;
+    },
+    /** 聚焦某层（时间轴上标红） */
+    focus: function (n) { ST.focusFloor = n; ST.selected = n; renderFloorCard(n); drawTimeline(); return ST.focusFloor; },
+    /** 生成冲楼预测卡（返回 canvas） */
+    makeCard: function (target, name) {
+      if (target) $('selTarget').value = String(target);
+      if (name != null) $('inpCardName').value = name;
+      return buildCard();
+    },
+    /** 走「手动导入」通道：传入 JSON 文本 */
+    parseText: function (t) { $('taJson').value = t; doParseImport(); return $('importMsg').textContent; },
+    /** 当前状态摘要 */
+    stats: function () {
+      var validReplies = 0, strictReplies = 0, replies = 0;
+      ST.posts.forEach(function (p) {
+        if (p.n === 1) return;
+        replies++;
+        if (p.valid) validReplies++;
+        if (p.strict) strictReplies++;
+      });
+      return {
+        posts: ST.posts.size,
+        replies: replies,
+        highest: ST.meta.highest,
+        participants: ST.meta.participants,
+        lastPostedAt: ST.meta.lastPostedAt,
+        source: ST.source,
+        valid: validReplies,
+        validStrict: strictReplies,
+        validVariant: validReplies - strictReplies
+      };
+    },
+    /** 里程碑解析结果（自测断言用） */
+    milestones: function () {
+      return MILESTONES.map(function (m) {
+        var r = resolveMilestone(m, 'loose');
+        var rs = resolveMilestone(m, 'strict');
+        return {
+          mark: m,
+          chain: r.chain.map(function (c) { return c.n + (c.valid ? '✓' : '✗'); }).join('→'),
+          landing: r.landing ? r.landing.n : null,
+          landingValid: r.landing ? r.landing.valid : null,
+          user: r.landing && r.landing.rec ? r.landing.rec.user : null,
+          chainStrict: rs.chain.map(function (c) { return c.n + (c.valid ? '✓' : '✗'); }).join('→'),
+          landingStrict: rs.landing ? rs.landing.n : null
+        };
+      });
+    }
+  };
+}
+
+function boot() {
+  try {
+    loadBaseline();
+    var restored = loadSnapshot();
+    bindEvents();
+    renderAll();
+    if (restored) {
+      setMsg('importMsg', '↺ 已从 localStorage 恢复上次导入的快照（' + ST.posts.size + ' 层）。', 'ok');
+    }
+    // 首屏只发 1 次请求
+    refresh(false);
+    startAutoRefresh();
+    exposeDebugAPI();
+  } catch (e) {
+    // 任何异常都不允许白屏：退化为最小可用页面
+    var b = $('banner');
+    if (b) {
+      b.classList.remove('is-hidden');
+      $('bannerTitle').textContent = '⚠️ 页面初始化异常（已降级）';
+      $('bannerText').textContent = '错误：' + esc(e && e.message ? e.message : String(e)) + '。已保留基础内容，可尝试手动导入 JSON。';
+    }
+    try { renderKPI(); } catch (e2) { /* noop */ }
+  }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+</script>
+</body>
+</html>
