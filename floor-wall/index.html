@@ -600,6 +600,7 @@ var IS_FILE = (location.protocol === 'file:');
 var LS_KEY     = 'floorwall.snapshot.v1';
 var TARGET_MAX = 1024;
 var MILESTONES = [128, 256, 512, 1024];
+var ACTIVITY_END_MS = Date.parse('2026-10-23T23:59:00+08:00');   // 官方活动截止时刻；超过后预测口径切换为「自然增长」
 var REFRESH_MS = 180000;         // 自动探查周期：3 分钟（镜像每 15 分钟更新一次，60s 太频繁）
 /* ==========================================================================
    自主探查通道（Autonomous Probing）
@@ -1260,8 +1261,11 @@ function renderMilestones() {
     var body = '';
     var shift = '';
     if (!landing || !landing.rec) {
-      body = '<div class="ms-body">该楼层尚未出现。下方预测器给出预计达成时刻。</div>';
-      shift = '<div class="ms-shift">等待中 · 距目标还差 <b>' + Math.max(0, TARGET_MAX - m) + '</b> 层</div>';
+      var ended = Date.now() > ACTIVITY_END_MS;
+      body = '<div class="ms-body">' + (ended
+        ? '官方活动已于 10-23 24:00 截止，该里程碑未在活动期内达成；楼层仍在自然增长，预测仅反映自然走势。'
+        : '该楼层尚未出现。下方预测器给出预计达成时刻。') + '</div>';
+      shift = '<div class="ms-shift">等待中 · 距目标还差 <b>' + Math.max(0, m - ST.meta.highest) + '</b> 层</div>';
     } else {
       body = '<div class="ms-body">' + (landing.rec.excerpt ? esc(landing.rec.excerpt) : '<i>（无正文）</i>') + '</div>';
       if (r.shifted) {
@@ -1386,7 +1390,12 @@ function renderPredictor() {
 
   var note = '口径说明：近 6 小时窗口取「最后一条楼层时间」往前 6 小时；当前快照最后回复于 ' + fmtDT(r.ref) +
     '，该窗口落在夜间低峰，因此主口径偏保守。参考口径中，近 24 小时 ' + r.r24.toFixed(2) +
-    ' 楼/时、全程均速 ' + r.rAll.toFixed(2) + ' 楼/时。官方活动截止 10-23 23:59，若要落在截止前需接近全程均速。';
+    ' 楼/时、全程均速 ' + r.rAll.toFixed(2) + ' 楼/时。';
+  if (Date.now() > ACTIVITY_END_MS) {
+    note += '官方活动已于 10-23 23:59 截止 —— 1024 楼最终未在活动期内达成；楼层仍在自然增长，以下预测仅反映楼层的自然走势。';
+  } else {
+    note += '官方活动截止 10-23 23:59，若要落在截止前需接近全程均速。';
+  }
   if (r.eta24) note += '（近 24 小时口径预计 ' + fmtDT(r.eta24) + '）';
   if (r.etaAll) note += '（全程均速口径预计 ' + fmtDT(r.etaAll) + '）';
   $('predictNote').textContent = note;

@@ -839,6 +839,7 @@ function updateStats(){
    ========================================================================== */
 
 function requestMove(dir){
+  if (topupPending) landTopUp();             // 补位动画未落地时先立即结算，保证棋盘状态一致
   if (over) return;
   if (won && !hasMoves()) return;
   moveQueue.push(dir);
@@ -860,8 +861,8 @@ function wait(ms){
 }
 
 async function doMove(dir){
-  // 移动时若正在放演出，先收起，避免遮挡
-  if (showing){ showQueue = []; hideMergeOverlay(); }
+  // 移动时若正在放演出，先收起，避免遮挡（showing 必须一并复位，否则后续演出永久失效）
+  if (showing){ showQueue = []; showing = false; hideMergeOverlay(); }
 
   const res = computeMove(dir);
   if (!res.changed){
@@ -955,7 +956,31 @@ async function doMove(dir){
 }
 
 /* 终局补位：把一格直接补满到 64 个 1（沿用本作的「补位」语言；每局有限次数） */
+/* 补位动画期间棋盘状态未落地：topupPending 记录待落地信息，落地前移动会先立即结算，重开一局则直接丢弃 */
+let topupPending = null;
+function landTopUp(){
+  const p = topupPending;
+  if (!p) return;
+  topupPending = null;
+  const nt = topUpTile(p.tile);
+  grid[p.idx] = nt;
+  if (p.el){ updateTileEl(p.el, nt); tileEls.set(nt.id, p.el); }
+  score += p.need * 5;
+  updateStats();
+  renderOpPanel();
+  if (selectedId !== null) renderDecodePanel();
+  if (checkVictory()){
+    triggerVictory();
+  } else {
+    showBanner('已补位 ' + p.need + ' 位 —— 该格现在是满格（64 个 1）。', false);
+    if (!hasMoves()){
+      over = true;
+      showBanner('还剩未满的格子：点它，再在右侧「64 位解读」里点「补位到满格」（本局还剩 ' + topupLeft + ' 次），或点「重开一局」。', true);
+    }
+  }
+}
 function doTopUp(tile){
+  if (topupPending) return;                 // 上一张补位还在动画中：等它落地，避免重复计分
   const idx = grid.indexOf(tile);
   if (idx < 0 || tile.value >= 64) return;
   if (topupLeft <= 0) return;
@@ -965,38 +990,19 @@ function doTopUp(tile){
   const zeros = [];
   for (let i = 0; i < BITS; i++) if (!tile.bits[i]) zeros.push(i);
   shuffle(zeros);
-  const newBits = new Uint8Array(BITS);
-  newBits.set(tile.bits);
   const need = zeros.length;
+  topupPending = { tile, idx, el, need };
 
   zeros.forEach(function(z, k){
     setTimeout(function(){
-      newBits[z] = 1;
-      if (dots){
+      if (topupPending !== null && dots){
         dots[z].classList.add('on', 'popin');
         setTimeout(function(){ dots[z].classList.remove('popin'); }, 300);
       }
     }, k * 22);
   });
 
-  setTimeout(function(){
-    const nt = topUpTile(tile);
-    grid[idx] = nt;
-    if (el){ updateTileEl(el, nt); tileEls.set(nt.id, el); }
-    score += need * 5;
-    updateStats();
-    renderOpPanel();
-    if (selectedId !== null) renderDecodePanel();
-    if (checkVictory()){
-      triggerVictory();
-    } else {
-      showBanner('已补位 ' + need + ' 位 —— 该格现在是满格（64 个 1）。', false);
-      if (!hasMoves()){
-        over = true;
-        showBanner('还剩未满的格子：点它，再在右侧「64 位解读」里点「补位到满格」（本局还剩 ' + topupLeft + ' 次），或点「重开一局」。', true);
-      }
-    }
-  }, need * 22 + 140);
+  setTimeout(landTopUp, need * 22 + 140);
 }
 
 function hasMoves(){
@@ -1442,6 +1448,10 @@ function triggerVictory(){
 $('btnCloseVictory').addEventListener('click', function(){
   victoryOverlay.hidden = true;
   stopBokeh();
+  // 胜利时 16 格全部满格，棋盘已无路可走：给出明确指引，避免方向键被静默吞掉
+  if (!hasMoves()){
+    showBanner('这一局已登顶：16 格全部满格、1024 位全亮，没有可移动的格子了。点「重开一局」开始新的一局，或点「演示：查看胜利画面」再次回看。', false);
+  }
 });
 
 /* ==========================================================================
@@ -1649,6 +1659,7 @@ function restart(){
   over = false; won = false;
   score = 0; steps = 0; selectedId = null;
   topupLeft = TOPUP_CHARGES;                 // 重开一局，补位次数恢复
+  topupPending = null;                       // 丢弃尚未落地的补位，防止旧定时器污染新棋盘
   mergeLog = []; showQueue = []; showing = false;
   hideMergeOverlay();
   hideBanner();
